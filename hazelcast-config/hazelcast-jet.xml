@@ -1,0 +1,4 @@
+<hazelcast-jet xsi:schemaLocation="http://www.hazelcast.com/schema/jet-config  http://www.hazelcast.com/schema/config/hazelcast-jet-config-3.2.xsd"
+               xmlns="http://www.hazelcast.com/schema/jet-config"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+</hazelcast-jet>

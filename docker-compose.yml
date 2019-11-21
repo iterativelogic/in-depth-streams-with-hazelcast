@@ -1,0 +1,81 @@
+---
+version: "3"
+
+services:
+
+  jet-server:
+    image: hazelcast/hazelcast-jet:3.2
+    volumes:
+      - ".:/opt/project"
+    command: /opt/hazelcast-jet/bin/jet-start.sh
+
+
+  # member-2:
+  #   container_name: member-2
+  #   image: adoptopenjdk/openjdk8:alpine
+  #   volumes:
+  #     - ".:/opt/project"
+  #   command: >
+  #     java -cp /opt/project/hazelcast-server/target/hazelcast-server-1.0-SNAPSHOT.jar
+  #     -Dhazelcast.config=/opt/project/hazelcast-config/hazelcast.xml
+  #     com.hazelcast.training.streams.server.Server
+
+  # client:
+  #   container_name: client
+  #   image: adoptopenjdk/openjdk8:alpine
+  #   volumes:
+  #     - ".:/opt/project"
+  #   depends_on:
+  #     - member-1
+  #     - member-2
+  #   command: >
+  #     java -cp /opt/project/hazelcast-client/target/hazelcast-client-1.0-SNAPSHOT.jar
+  #     -Dhazelcast.client.config=/opt/project/hazelcast-config/hazelcast-client.xml
+  #     com.hazelcast.training.streams.client.SimpleClient
+  #     --count=10000
+  #     --rate=10
+  #     --map=test
+  #
+  # imdg-management-center:
+  #   container_name: imdg-management-center
+  #   image: hazelcast/management-center:3.12.7
+  #   volumes:
+  #     - ".:/opt/project"
+  #   build:
+  #     context: docker-images/hazelcast-mancenter
+  #   ports:
+  #     - 8080:8080
+  #
+  # jet-management-center:
+  #   container_name: jet-management-center
+  #   image: hazelcast/hazelcast-jet-management-center:3.2
+  #   volumes:
+  #     - ".:/opt/project"
+  #   build:
+  #     context: docker-images/hazelcast-mancenter
+  #   ports:
+  #     - 8081:8081
+  #
+  # fleetsim:
+  #   container_name: fleetsim
+  #   build:
+  #     context: docker-images/hazelcast-python
+  #   volumes:
+  #     - ".:/opt/project"
+  #   depends_on:
+  #     - member-1
+  #   command: >
+  #     python /opt/project/data/fleetsim.py
+  #
+  # mapserver:
+  #   container_name: mapserver
+  #   build:
+  #     context: docker-images/hazelcast-python
+  #   volumes:
+  #     - ".:/opt/project"
+  #   depends_on:
+  #     - member-1
+  #   ports:
+  #     - 5006:5006
+  #   command: >
+  #     bokeh serve /opt/project/UI/dashboard.py
