@@ -16,7 +16,7 @@ services:
     container_name: imdg-management-center
     image: hazelcast/management-center@sha256:52ea78110f7cf4d129d73133606dd35796a61e47728a72b5fe805fc210fa34d1
     volumes:
-      - ".:/opt/project"
+      - "./mc-home:/data"
     ports:
       - 8080:8080
 
