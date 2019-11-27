@@ -1,0 +1,39 @@
+---
+version: "3"
+
+services:
+
+  # TODO edit the command paragraph to use the correct class path and user name
+  # TODO configure the underlying hazelcast instance to use /opt/project/config/hazelcast.xml for declarative configuration
+  jet-server-1:
+    container_name: jet-server-1
+    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+    volumes:
+      - ".:/opt/project"
+    command: > java
+      -cp classpath-here
+      -Dhazelcast.config=confg-file
+      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      com.example.MyServer
+
+  # TODO make 2 more copies of jet-server-1, renaming them to jet-server-2 and jet-server-3 respectively. Make sure to
+  #      change the container_name to match.
+
+  imdg-management-center:
+    container_name: imdg-management-center
+    image: hazelcast/management-center@sha256:52ea78110f7cf4d129d73133606dd35796a61e47728a72b5fe805fc210fa34d1
+    volumes:
+      - "./mc-home:/data"
+    ports:
+      - 8080:8080
+
+  jet-management-center:
+    container_name: jet-management-center
+    image: hazelcast/hazelcast-jet-management-center@sha256:532f625637adbd576f224d971c76c94d2f44fd37491c57ac689965b4e70d40b5
+    environment:
+      MC_CLIENT_CONFIG: /opt/project/config/hazelcast-client.xml
+      MC_LICENSE_KEY: ${JET_LICENSE_KEY}
+    volumes:
+      - ".:/opt/project"
+    ports:
+      - 8081:8081
