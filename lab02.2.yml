@@ -10,7 +10,8 @@ services:
     image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
     volumes:
       - ".:/opt/project"
-    command: > java
+    command: >
+      java 
       -cp classpath-here
       -Dhazelcast.config=confg-file
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
