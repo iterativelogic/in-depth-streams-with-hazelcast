@@ -9,8 +9,11 @@ services:
     volumes:
       - ".:/opt/project"
     environment:
+      # use this section to set environment variables
       JAVA_OPTS: -Dhazelcast.config=/opt/project/config/hazelcast.xml
       JET_LICENSE_KEY: ${JET_LICENSE_KEY}
+    command:
+
 
   imdg-management-center:
     container_name: imdg-management-center

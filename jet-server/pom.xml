@@ -10,9 +10,9 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>hazelcast-server</artifactId>
+    <artifactId>jet-server</artifactId>
 
-    <name>hazelcast-server</name>
+    <name>jet-server</name>
 
     <build>
         <plugins>
@@ -36,8 +36,8 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
+            <groupId>com.hazelcast.jet</groupId>
+            <artifactId>hazelcast-jet-enterprise</artifactId>
         </dependency>
     </dependencies>
 

@@ -13,12 +13,11 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hazelcast.version>3.12</hazelcast.version>
+        <jet.version>3.2</jet.version>
     </properties>
 
     <modules>
-        <module>hazelcast-server</module>
-        <module>hazelcast-client</module>
+        <module>jet-server</module>
     </modules>
 
     <repositories>
@@ -31,34 +30,9 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-client</artifactId>
-                <version>${hazelcast.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast</artifactId>
-                <version>${hazelcast.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-all</artifactId>
-                <version>${hazelcast.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-enterprise-client</artifactId>
-                <version>${hazelcast.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-enterprise</artifactId>
-                <version>${hazelcast.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.hazelcast</groupId>
-                <artifactId>hazelcast-enterprise-all</artifactId>
-                <version>${hazelcast.version}</version>
+                <groupId>com.hazelcast.jet</groupId>
+                <artifactId>hazelcast-jet-enterprise</artifactId>
+                <version>${jet.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
