@@ -1,0 +1,56 @@
+---
+version: "3"
+
+services:
+
+  jet-server-1:
+    container_name: jet-server-1
+    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+    volumes:
+      - ".:/opt/project"
+    command: >
+      java
+      -cp /opt/project/config:/opt/project/jet-server-spring/target/jet-server-spring-1.0-SNAPSHOT.jar
+      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      com.hazelcast.training.streams.server.SpringServer
+
+#  jet-server-2:
+#    container_name: jet-server-2
+#    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+#    volumes:
+#      - ".:/opt/project"
+#    command: >
+#      java
+#      -cp /opt/project/config:/opt/project/jet-server-spring/target/jet-server-spring-1.0-SNAPSHOT.jar
+#      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+#      com.hazelcast.training.streams.server.SpringServer
+#
+#  jet-server-3:
+#    container_name: jet-server-3
+#    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+#    volumes:
+#      - ".:/opt/project"
+#    command: >
+#      java
+#      -cp /opt/project/config:/opt/project/jet-server-spring/target/jet-server-spring-1.0-SNAPSHOT.jar
+#      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+#      com.hazelcast.training.streams.server.SpringServer
+
+  imdg-management-center:
+    container_name: imdg-management-center
+    image: hazelcast/management-center@sha256:52ea78110f7cf4d129d73133606dd35796a61e47728a72b5fe805fc210fa34d1
+    volumes:
+      - "./mc-home:/data"
+    ports:
+      - 8080:8080
+
+  jet-management-center:
+    container_name: jet-management-center
+    image: hazelcast/hazelcast-jet-management-center@sha256:532f625637adbd576f224d971c76c94d2f44fd37491c57ac689965b4e70d40b5
+    environment:
+      MC_CLIENT_CONFIG: /opt/project/config/hazelcast-client.xml
+      MC_LICENSE_KEY: ${JET_LICENSE_KEY}
+    volumes:
+      - ".:/opt/project"
+    ports:
+      - 8081:8081

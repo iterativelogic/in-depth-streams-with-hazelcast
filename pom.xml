@@ -18,6 +18,7 @@
 
     <modules>
         <module>jet-server</module>
+        <module>jet-server-spring</module>
     </modules>
 
     <repositories>

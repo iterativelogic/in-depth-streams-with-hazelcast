@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jet="http://www.hazelcast.com/schema/jet-spring"
+       xmlns:hz="http://www.hazelcast.com/schema/spring"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+        http://www.hazelcast.com/schema/spring
+        http://www.hazelcast.com/schema/spring/hazelcast-spring-3.12.xsd
+        http://www.hazelcast.com/schema/jet-spring
+        http://www.hazelcast.com/schema/jet-spring/hazelcast-jet-spring-3.2.xsd">
+    <jet:instance id="jet">
+        <hz:config>
+            <hz:network port="5701">
+                <hz:join>
+                    <hz:multicast enabled="false"/>
+                    <hz:tcp-ip>
+                        <hz:member>jet-server-1:5701</hz:member>
+                    </hz:tcp-ip>
+                </hz:join>
+                <hz:rest-api enabled="true">
+                    <hz:endpoint-group name="DATA" enabled="true"/>
+                    <hz:endpoint-group name="HOT_RESTART" enabled="true"/>
+                    <hz:endpoint-group name="CLUSTER_WRITE" enabled="true"/>
+                    <hz:endpoint-group name="CLUSTER_READ" enabled="true"/>
+                    <hz:endpoint-group name="HEALTH_CHECK" enabled="true"/>
+                    <hz:endpoint-group name="WAN" enabled="true"/>
+                </hz:rest-api>
+            </hz:network>
+            <hz:management-center>http://imdg-management-center:8080/hazelcast-mancenter</hz:management-center>
+        </hz:config>
+        <jet:properties>
+            <hz:property name="hazelcast.initial.min.cluster.size">2</hz:property>
+        </jet:properties>
+    </jet:instance>
+</beans>
