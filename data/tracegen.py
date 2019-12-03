@@ -1,19 +1,20 @@
-import hazelcast
-import hazelcast.core
 import json
 import logging
 import math
 import random
-import time
 
-VEHICLE_COUNT = 200
 PING_INTERVAL = 30
-RANDOM_SEED = 271
-MILES_PER_DEGREE_LATITUDE = 69 # rough approximation
-MILES_PER_DEGREE_LONGITUDE = 54 # very roughly correct for the US latitudes 31 - 41
-HAZELCAST_MEMBERS = ['member-1:5701']
-LOG_LEVEL = logging.DEBUG
-MAP_FILE='/opt/project/data/mapdata.csv'
+MILES_PER_DEGREE_LATITUDE = 69  # rough approximation
+MILES_PER_DEGREE_LONGITUDE = 54  # very roughly correct for the US latitudes 31 - 41
+MAP_FILE = '/opt/project/data/mapdata.csv'
+
+
+class PingEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Ping):
+            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time}
+        else:
+            json.JSONEncoder.default(self, obj)
 
 
 class CityFacts:
@@ -24,7 +25,7 @@ class CityFacts:
         self.adjacent_cities = city_list
 
     def __repr__(self):
-        return 'CityFacts({0},{1},{2},{3})'.format(self.name,self.latitude,self.longitude,self.adjacent_cities)
+        return 'CityFacts({0},{1},{2},{3})'.format(self.name, self.latitude, self.longitude, self.adjacent_cities)
 
 
 class DMSFormatException(Exception):
@@ -79,18 +80,20 @@ def load():
 
 
 class Ping:
-    def __init__(self, id, lat, lon, time):
-        self.id = id
+    def __init__(self, vin, lat, lon, time):
+        self.vin = vin
         self.latitude = lat
         self.longitude = lon
         self.time = time
 
-    def toJSON(self):
-        return json.dumps({'id': self.id, 'latitude': self.latitude, 'longitude': self.longitude, 'time' : self.time })
+    def toCSV(self):
+        return '{0},{1},{2},{3}'.format(self.vin, self.latitude, self.longitude, self.time)
+
 
 class Trace:
-    def __init__(self, from_city, to_city, mph, t_zero):
+    def __init__(self, vin, from_city, to_city, mph, t_zero):
         # the sequence of pings will begin at the given time offset and repeat regularly after that
+        self.vin = vin
         self.from_city = from_city
         self.to_city = to_city
 
@@ -101,19 +104,20 @@ class Trace:
         t = t_zero
         lat = start_lat
         lon = start_long
-        distance =  math.sqrt((MILES_PER_DEGREE_LATITUDE * (end_lat - start_lat))**2 + (MILES_PER_DEGREE_LONGITUDE * (end_long - start_long))**2)
+        distance = math.sqrt((MILES_PER_DEGREE_LATITUDE * (end_lat - start_lat)) ** 2 + (
+                MILES_PER_DEGREE_LONGITUDE * (end_long - start_long)) ** 2)
         ping_count = int((3600 * distance) / (PING_INTERVAL * mph))
-        latitude_step = (end_lat - start_lat)/ping_count
+        latitude_step = (end_lat - start_lat) / ping_count
         longitude_step = (end_long - start_long) / ping_count
 
         self.pings = []
         self.next_ping_index = 0
-        self.pings.append(Ping(0,lat, lon, t))
+        self.pings.append(Ping(self.vin, lat, lon, t))
         for i in range(ping_count):
             t += PING_INTERVAL
             lat += latitude_step
             lon += longitude_step
-            self.pings.append(Ping(0,lat, lon, t))
+            self.pings.append(Ping(self.vin, lat, lon, t))
 
     def next(self, t):
         """
@@ -130,62 +134,29 @@ class Trace:
 
         return result
 
+    def next(self, t_after, t_before, count):
+        """
+        Returns a (possibly empty) list of all pings that happened after t_after and before t_before
+        ping_index is ignored.
+        In any case, no more than count results will be returned.
+        Results will be in ascending order by time.
+        Raises a StopIteration exception when there are no pings that meet the criteria
+        """
+        result = []
+        for ping in self.pings:
+            if ping.time > t_after and ping.time < t_before:
+                result.append(ping)
+                if len(result) == count:
+                    break
+
+        if len(result) == 0:
+            raise StopIteration
+
+        return result
 
 
-def random_trace(from_city, start_time):
-    if from_city is None:
-        from_city = random.choice(map_data_aslist)
-
-
-    to_city = map_data[random.choice(from_city.adjacent_cities)]
-
-    logging.debug('creating random trace from: %s to %s',from_city.name, to_city.name)
-    speed = random.gauss(65,10)
-    start_time += random.uniform(0,PING_INTERVAL)
-    return Trace(from_city, to_city, speed, start_time)
-
-
-if __name__ == '__main__':
-    random.seed(RANDOM_SEED)
-    logging.basicConfig(level=LOG_LEVEL)
-    map_data = load()
-    map_data_aslist = [city for city in map_data.values()]
-
-    # configure the Hazelcast client
-    hz_config = hazelcast.ClientConfig()
-    hz_config.network_config.addresses = HAZELCAST_MEMBERS
-
-    # retry up to 10 times, waiting 5 seconds between connection attempts
-    hz_config.network_config.connection_timeout = 5
-    hz_config.network_config.connection_attempt_limit = 10
-    hz_config.network_config.connection_attempt_period = 5
-    hz = hazelcast.HazelcastClient(hz_config)
-    position_map = hz.get_map('positions')
-
-    # create a trace for each truck - step through simulation time second by second
-    start_time = time.time()
-    vehicles = []
-    for i in range(VEHICLE_COUNT):
-        vehicles.append(random_trace(None,start_time))
-
-    next_wakeup = start_time + 1
-    while True:
-        sleep_time = next_wakeup - time.time()
-        if sleep_time > 0:
-            time.sleep(sleep_time)
-
-        now = time.time()
-        for i in range(len(vehicles)):
-            try:
-                pings = vehicles[i].next(now)
-                for ping in pings:
-                    ping.id = i
-                    position_map.put(i, hazelcast.core.HazelcastJsonValue(ping.toJSON()))
-                    logging.debug('sent %s', ping.toJSON())
-
-            except StopIteration:
-                from_city = vehicles[i].to_city
-                vehicles[i] = random_trace(from_city,time.time())
-
-
-        next_wakeup += 1
+def random_trace(vin, from_city, to_city, start_time):
+    logging.debug('creating random trace from: %s to %s', from_city.name, to_city.name)
+    speed = random.gauss(65, 10)
+    start_time += random.uniform(0, PING_INTERVAL)
+    return Trace(vin, from_city, to_city, speed, start_time)
