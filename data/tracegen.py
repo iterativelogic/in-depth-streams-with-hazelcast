@@ -12,7 +12,7 @@ MAP_FILE = '/opt/project/data/mapdata.csv'
 class PingEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Ping):
-            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time}
+            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time, 'sequence': obj.sequence}
         else:
             json.JSONEncoder.default(self, obj)
 
@@ -85,6 +85,7 @@ class Ping:
         self.latitude = lat
         self.longitude = lon
         self.time = time
+        self.sequence = 0
 
     def toCSV(self):
         return '{0},{1},{2},{3}'.format(self.vin, self.latitude, self.longitude, self.time)
@@ -134,26 +135,26 @@ class Trace:
 
         return result
 
-    def next(self, t_after, t_before, count):
-        """
-        Returns a (possibly empty) list of all pings that happened after t_after and before t_before
-        ping_index is ignored.
-        In any case, no more than count results will be returned.
-        Results will be in ascending order by time.
-        Raises a StopIteration exception when there are no pings that meet the criteria
-        """
-        result = []
-        for ping in self.pings:
-            if ping.time > t_after and ping.time < t_before:
-                result.append(ping)
-                if len(result) == count:
-                    break
-
-        if len(result) == 0:
-            raise StopIteration
-
-        return result
-
+    # def next_within_window(self, t_after, t_before, count):
+    #     """
+    #     Returns a (possibly empty) list of all pings that happened after t_after and before t_before
+    #     ping_index is ignored.
+    #     In any case, no more than count results will be returned.
+    #     Results will be in ascending order by time.
+    #     Raises a StopIteration exception when there are no pings that meet the criteria
+    #     """
+    #     result = []
+    #     for ping in self.pings:
+    #         if ping.time > t_after and ping.time < t_before:
+    #             result.append(ping)
+    #             if len(result) == count:
+    #                 break
+    #
+    #     if len(result) == 0:
+    #         raise StopIteration
+    #
+    #     return result
+    #
 
 def random_trace(vin, from_city, to_city, start_time):
     logging.debug('creating random trace from: %s to %s', from_city.name, to_city.name)
