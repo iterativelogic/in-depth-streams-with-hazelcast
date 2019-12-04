@@ -20,6 +20,15 @@
         </rest-api>
     </network>
 
+    <event-journal enabled="true">
+        <mapName>vehicles</mapName>
+        <capacity>100000</capacity>
+        <time-to-live-seconds>3600</time-to-live-seconds>
+    </event-journal>
+
+    <map name="vehicles">
+        <in-memory-format>OBJECT</in-memory-format>
+    </map>
 
     <properties>
         <property name="hazelcast.initial.min.cluster.size">2</property>

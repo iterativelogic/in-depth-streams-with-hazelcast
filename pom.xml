@@ -19,6 +19,7 @@
     <modules>
         <module>jet-server</module>
         <module>jet-server-spring-boot</module>
+        <module>ingest-pipeline</module>
     </modules>
 
     <repositories>
