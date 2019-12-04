@@ -3,6 +3,8 @@ version: "3"
 
 services:
 
+  # TODO edit the command paragraph to use the correct class path and user name
+  # TODO configure the underlying hazelcast instance to use /opt/project/config/hazelcast.xml for declarative configuration
   jet-server-1:
     container_name: jet-server-1
     image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
@@ -10,34 +12,13 @@ services:
       - ".:/opt/project"
     command: >
       java
-      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
-      -Dhazelcast.config=/opt/project/config/hazelcast.xml
+      -cp classpath-here
+      -Dhazelcast.config=confg-file
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
-      com.hazelcast.training.streams.server.Server
+      com.example.MyServer
 
-  jet-server-2:
-    container_name: jet-server-2
-    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
-    volumes:
-      - ".:/opt/project"
-    command: >
-      java
-      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
-      -Dhazelcast.config=/opt/project/config/hazelcast.xml
-      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
-      com.hazelcast.training.streams.server.Server
-
-  jet-server-3:
-    container_name: jet-server-3
-    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
-    volumes:
-      - ".:/opt/project"
-    command: >
-      java
-      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
-      -Dhazelcast.config=/opt/project/config/hazelcast.xml
-      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
-      com.hazelcast.training.streams.server.Server
+  # TODO make 2 more copies of jet-server-1, renaming them to jet-server-2 and jet-server-3 respectively. Make sure to
+  #      change the container_name to match.
 
   imdg-management-center:
     container_name: imdg-management-center
