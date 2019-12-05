@@ -10,6 +10,7 @@ public class Ping implements Serializable {
     private float latitude;
     private float longitude;
     private float time;
+    private int sequence;
 
     public String getVin() {
         return vin;
@@ -41,5 +42,20 @@ public class Ping implements Serializable {
 
     public void setTime(float time) {
         this.time = time;
+    }
+
+    public int getSequence() {
+        return sequence;
+    }
+
+    @Override
+    public String toString() {
+        return "Ping{" +
+                "vin='" + vin + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", time=" + time +
+                ", sequence=" + sequence +
+                '}';
     }
 }

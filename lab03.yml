@@ -16,3 +16,11 @@ services:
       FLASK_APP: fleetsim_beta
     command: flask run -h 0.0.0.0 -p 8000
 
+  fleetsim-alpha:
+    container_name: fleetsim-alpha
+    build:
+      context: docker-images/hazelcast-python
+    volumes:
+      - ".:/opt/project"
+    working_dir: /opt/project/data
+    command: python fleetsim_alpha.py

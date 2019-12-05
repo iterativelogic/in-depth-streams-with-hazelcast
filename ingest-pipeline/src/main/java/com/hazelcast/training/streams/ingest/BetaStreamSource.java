@@ -1,9 +1,9 @@
 package com.hazelcast.training.streams.ingest;
 
 import com.google.gson.Gson;
-import com.hazelcast.core.HazelcastJsonValue;
-import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.SourceBuilder;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -13,12 +13,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 public class BetaStreamSource {
+    private static ILogger logger = Logger.getLogger(BetaStreamSource.class);
 
-    private URL url;
+    private String url;
     private Gson gson;
 
     // current state
-    private float highestTimestamp;
+    private int highestSequence;
     private char [] buffer = new char[10000];
 
     public static BetaStreamSource create(String url){
@@ -26,21 +27,20 @@ public class BetaStreamSource {
     }
 
     public BetaStreamSource(String url){
-        try {
-            this.url = new URL(url);
-        } catch(MalformedURLException x){
-            throw new RuntimeException(url + " is not a valid URL");
-        }
-
+        this.url = url;
         gson = new Gson();
     }
 
     public void fillBuffer(SourceBuilder.TimestampedSourceBuffer<Ping> buffer){
-        Ping[] pings = poll(highestTimestamp, 100);
+        Ping[] pings = poll(highestSequence, 200);
 
-        for(Ping ping: pings){
-            if (ping.getTime() > highestTimestamp) highestTimestamp = ping.getTime();
-            buffer.add(ping, (long) (ping.getTime() * 1000.0) );
+        for(Ping p: pings){
+            buffer.add(p, (long) (p.getTime() * 1000.0));
+        }
+
+        if (pings.length > 0) {
+            highestSequence = pings[pings.length - 1].getSequence();
+            logger.fine("Added " + pings.length + " pings. Highest sequence number is: " + highestSequence);
         }
 
     }
@@ -50,11 +50,10 @@ public class BetaStreamSource {
         // will be rebuilt each time.
         HttpURLConnection connection = null;
         try {
+            URL url = new URL(this.url + "?since=" + highestSequence + "&limit=" + limit);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Accept", "application/json");
-            connection.setRequestProperty("since",Float.toString(highestTimestamp));
-            connection.setRequestProperty("limit", Integer.toString(limit));
 
             if (connection.getResponseCode() != 200)
                 throw new RuntimeException("Received a " + connection.getResponseCode() + " response code while polling " + url);
@@ -67,5 +66,13 @@ public class BetaStreamSource {
         } finally {
             if (connection != null) connection.disconnect();
         }
+    }
+
+    public int snapshot(){
+        return this.highestSequence;
+    }
+
+    public void restore(int seq){
+        this.highestSequence = seq;
     }
 }

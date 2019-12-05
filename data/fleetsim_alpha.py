@@ -7,7 +7,7 @@ import VinGenerator.vin as vin
 
 RANDOM_SEED = 271
 LOG_LEVEL = logging.DEBUG
-VEHICLE_COUNT = 250
+VEHICLE_COUNT = 2
 CSV_OUTPUT_DIR = '/opt/project/data/alpha'
 
 
