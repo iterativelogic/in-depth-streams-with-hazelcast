@@ -32,17 +32,23 @@ public class BetaStreamSource {
     }
 
     public void fillBuffer(SourceBuilder.TimestampedSourceBuffer<Ping> buffer){
-        Ping[] pings = poll(highestSequence, 200);
+        // TODO implement the fillBuffer function.  Poll the web service using the code below
+        //      and call buffer.add once for each item returned.  Be sure to keep track of the
+        //      highest sequence seen so far.
+        //
+        //      Also, this is a time stamped source so when you
+        //      call buffer.add, you will pass a Ping object and a timestamp.  Time stamps should be
+        //      a long value indicating the number of milliseconds since some point in time.  The
+        //      time stamps in the Ping object are floats representing seconds since some point in
+        //      time so you will need to do some conversion.
+    }
 
-        for(Ping p: pings){
-            buffer.add(p, (long) (p.getTime() * 1000.0));
-        }
+    public int snapshot(){
+        // TODO - implement this to save the current position of the stream
+    }
 
-        if (pings.length > 0) {
-            highestSequence = pings[pings.length - 1].getSequence();
-            logger.fine("Added " + pings.length + " pings. Highest sequence number is: " + highestSequence);
-        }
-
+    public void restore(int seq){
+        // TODO - implement this to restore the current position of the stream
     }
 
     private Ping []poll(float since, int limit){
@@ -66,13 +72,5 @@ public class BetaStreamSource {
         } finally {
             if (connection != null) connection.disconnect();
         }
-    }
-
-    public int snapshot(){
-        return this.highestSequence;
-    }
-
-    public void restore(int seq){
-        this.highestSequence = seq;
     }
 }

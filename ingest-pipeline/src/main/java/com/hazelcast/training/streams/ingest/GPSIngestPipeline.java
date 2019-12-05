@@ -37,25 +37,8 @@ public class GPSIngestPipeline {
     public static Pipeline buildPipeline(String alphaDir, String betaURL){
         Pipeline pipeline = Pipeline.create();
 
-        StreamStage<String> sourceAlpha = pipeline.drawFrom(Sources.fileWatcher(alphaDir)).withTimestamps(line -> Util.timestampFromSourceAlpha(line), MAXIMUM_LATENESS_MS).setName("Source Alpha");
-
-        StreamStage<Ping> mapToPing = sourceAlpha.map(line -> Util.pingFromSourceAlpha(line)).setName("Map To Ping");
-
-        StreamSource<Ping> dataSourceBeta = SourceBuilder.timestampedStream("Beta Web Service", ctx -> BetaStreamSource.create(betaURL))
-                .<Ping>fillBufferFn((streamSource, buffer) -> streamSource.fillBuffer(buffer))
-                .createSnapshotFn( source -> source.snapshot())
-                .restoreSnapshotFn( (source, snapshots) -> source.restore(snapshots.get(0)))
-                .build();
-
-
-        StreamStage<Ping> sourceBeta = pipeline.drawFrom(dataSourceBeta).withNativeTimestamps(MAXIMUM_LATENESS_MS).setName("Source Beta");
-
-        StreamStage<Ping> mergeAlphaAndBeta = sourceBeta.merge(mapToPing).setName("Merge Alpha and Beta");
-
-        StreamStage<Tuple2<String, HazelcastJsonValue>> jsonStreamStage = mergeAlphaAndBeta.mapUsingContext(ContextFactory.withCreateFn(jet -> new Gson()), (gson, ping) -> Tuple2.tuple2(ping.getVin(), new HazelcastJsonValue(gson.toJson(ping))))
-                .setName("To Map Entry");
-
-        jsonStreamStage.drainTo(Sinks.map("vehicles"));
+        // TODO - build a pipeline to ingest both alpha and beta data sources, convert them to
+        //        map entries and save them in the "vehicles" map.
 
         return pipeline;
     }
