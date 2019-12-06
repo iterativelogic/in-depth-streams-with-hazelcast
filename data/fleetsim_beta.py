@@ -8,7 +8,7 @@ import VinGenerator.vin as vin
 
 RANDOM_SEED = 271
 LOG_LEVEL = logging.DEBUG
-VEHICLE_COUNT = 2
+VEHICLE_COUNT = 30
 
 
 class InfiniteList:
