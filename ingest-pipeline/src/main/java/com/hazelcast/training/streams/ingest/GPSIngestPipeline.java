@@ -30,14 +30,15 @@ public class GPSIngestPipeline {
         if (args.length < 2)
             throw new RuntimeException("Directory of Alpha Source and URL of Beta GPS Source are Required Arguments");
 
-        JobConfig config = new JobConfig();
-        config.setProcessingGuarantee(ProcessingGuarantee.AT_LEAST_ONCE);
-        config.setSnapshotIntervalMillis(10 * 1000);
-
         String dir = args[0];
         String url = args[1];
+
+        // TODO in lab 4, add a job config that specifies an AT_LEAST_ONCE processing guarantee and
+        //      a 10 second snapshot interval.
+        //      Pass the config object as the second parameter to jet.newJob(pipeline, config)
+
         Pipeline pipeline = buildPipeline(dir, url);
-        jet.newJob(pipeline, config);
+        jet.newJob(pipeline);
     }
 
     public static Pipeline buildPipeline(String alphaDir, String betaURL){

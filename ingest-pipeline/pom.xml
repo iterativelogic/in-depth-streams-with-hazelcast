@@ -49,8 +49,10 @@
         <dependency>
             <groupId>com.hazelcast.jet</groupId>
             <artifactId>hazelcast-jet-enterprise</artifactId>
-            <!-- for local work, comment this out -->
+            <!-- comment this out when working in local mode -->
+            <!--
             <scope>provided</scope>
+            -->
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
