@@ -9,7 +9,7 @@ from bokeh.models.map_plots import GMapOptions
 from bokeh.plotting import gmap
 
 LOG_LEVEL = logging.DEBUG
-HAZELCAST_MEMBERS = ['member-1:5701']
+HAZELCAST_MEMBERS = ['jet-server-1:5701']
 
 logging.basicConfig(level=LOG_LEVEL)
 
@@ -24,7 +24,7 @@ hz_config.network_config.connection_attempt_period = 5
 hz = hazelcast.HazelcastClient(hz_config)
 
 # position map and lock
-position_map = hz.get_map('positions')  # remote hz map
+position_map = hz.get_map('vehicles')  # remote hz map
 position_change_map_lock = threading.Lock()  # if we eventually end up with multiple map servers this should be a distributed lock
 position_change_map = dict()  # changes accumulate in this local map
 
@@ -63,7 +63,7 @@ position_map.add_entry_listener(include_value=True, updated_func=position_listen
 values = [entry.loads() for entry in position_map.values().result()]
 latitudes = [entry['latitude'] for entry in values]
 longitudes = [entry['longitude'] for entry in values]
-id_to_index_map = { item['id'] : i for (i, item) in enumerate(values)}
+id_to_index_map = { item['vin'] : i for (i, item) in enumerate(values)}
 # colors = ['gray' for c in range(len(latitudes))]
 # alphas = [1.0 for a in range(len(latitudes))]
 data_source = ColumnDataSource({'latitude': latitudes, 'longitude': longitudes})
@@ -83,9 +83,9 @@ def update():
     if len(position_change_map) > 0:
         with position_change_map_lock:
             entry_list = [entry for entry in [e.loads() for e in position_change_map.values()] if
-                          entry['id'] in id_to_index_map]  # in check is costly, can we do something better ?
-            longitude_patches = [(id_to_index_map[entry["id"]], entry["longitude"]) for entry in entry_list]
-            latitude_patches = [(id_to_index_map[entry["id"]], entry["latitude"]) for entry in entry_list]
+                          entry['vin'] in id_to_index_map]  # in check is costly, can we do something better ?
+            longitude_patches = [(id_to_index_map[entry['vin']], entry['longitude']) for entry in entry_list]
+            latitude_patches = [(id_to_index_map[entry['vin']], entry['latitude']) for entry in entry_list]
             patches['longitude'] = longitude_patches
             patches['latitude'] = latitude_patches
             position_change_map.clear()

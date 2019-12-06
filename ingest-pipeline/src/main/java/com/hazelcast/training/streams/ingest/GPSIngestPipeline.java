@@ -5,6 +5,8 @@ import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
 import com.hazelcast.jet.aggregate.AggregateOperations;
+import com.hazelcast.jet.config.JobConfig;
+import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
@@ -28,10 +30,14 @@ public class GPSIngestPipeline {
         if (args.length < 2)
             throw new RuntimeException("Directory of Alpha Source and URL of Beta GPS Source are Required Arguments");
 
+        JobConfig config = new JobConfig();
+        config.setProcessingGuarantee(ProcessingGuarantee.AT_LEAST_ONCE);
+        config.setSnapshotIntervalMillis(10 * 1000);
+
         String dir = args[0];
         String url = args[1];
         Pipeline pipeline = buildPipeline(dir, url);
-        jet.newJob(pipeline);
+        jet.newJob(pipeline, config);
     }
 
     public static Pipeline buildPipeline(String alphaDir, String betaURL){
