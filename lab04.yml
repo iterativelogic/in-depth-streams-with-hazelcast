@@ -90,3 +90,11 @@ services:
       - ".:/opt/project"
     ports:
       - 8081:8081
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    volumes:
+      - "./config:/etc/prometheus"
+    ports:
+      - 9090:9090

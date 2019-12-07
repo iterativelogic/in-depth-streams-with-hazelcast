@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.hazelcast.jet.pipeline.SourceBuilder;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import io.prometheus.client.Gauge;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -21,10 +22,13 @@ public class BetaStreamSource {
     // current state
     private int highestSequence;
     private char [] buffer = new char[10000];
+    private long lastPoll = 0;
 
     public static BetaStreamSource create(String url){
         return new BetaStreamSource(url);
     }
+
+    private static Gauge high_water_mark = Gauge.build().name("beta_high_water_mark").help("Highest sequence number observed by source Beta").register();
 
     public BetaStreamSource(String url){
         this.url = url;
@@ -46,6 +50,11 @@ public class BetaStreamSource {
     }
 
     private Ping []poll(float since, int limit){
+        long now = System.currentTimeMillis();
+        if (now - lastPoll < 2000) return new Ping [0];
+
+        lastPoll = now;
+
         // It would be more efficient to keep the connection open but this is more robust since the connection
         // will be rebuilt each time.
         HttpURLConnection connection = null;
@@ -60,7 +69,12 @@ public class BetaStreamSource {
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
 
-            return gson.fromJson(reader, Ping[].class);
+            Ping []result = gson.fromJson(reader, Ping[].class);
+
+            if (result.length > 0)
+                high_water_mark.set(result[result.length - 1].getSequence());
+
+            return result;
         } catch(IOException x){
             throw new RuntimeException("An error occurred while accessing the web service at: " + url);
         } finally {
