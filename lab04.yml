@@ -13,6 +13,8 @@ services:
       -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
       -Dhazelcast.config=/opt/project/config/hazelcast.xml
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      -Dhazelcast.logging.type=log4j2
+      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
       com.hazelcast.training.streams.server.Server
 
   jet-server-2:
@@ -25,6 +27,8 @@ services:
       -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
       -Dhazelcast.config=/opt/project/config/hazelcast.xml
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      -Dhazelcast.logging.type=log4j2
+      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
       com.hazelcast.training.streams.server.Server
 
 #  jet-server-3:
