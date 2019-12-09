@@ -1,6 +1,7 @@
 package com.hazelcast.training.streams.ingest;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /*
  * Ping is used as a convenience within the ingest stream (only)
@@ -11,6 +12,7 @@ public class Ping implements Serializable {
     private float longitude;
     private float time;
     private int sequence;
+    private String []obd_codes;
 
     public String getVin() {
         return vin;
@@ -48,6 +50,10 @@ public class Ping implements Serializable {
         return sequence;
     }
 
+    public String[] getOBDCodes() {
+        return obd_codes;
+    }
+
     @Override
     public String toString() {
         return "Ping{" +
@@ -56,6 +62,7 @@ public class Ping implements Serializable {
                 ", longitude=" + longitude +
                 ", time=" + time +
                 ", sequence=" + sequence +
+                ", obd_codes=" + Arrays.toString(obd_codes) +
                 '}';
     }
 }
