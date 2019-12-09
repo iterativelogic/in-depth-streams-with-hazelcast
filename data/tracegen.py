@@ -7,12 +7,14 @@ PING_INTERVAL = 30
 MILES_PER_DEGREE_LATITUDE = 69  # rough approximation
 MILES_PER_DEGREE_LONGITUDE = 54  # very roughly correct for the US latitudes 31 - 41
 MAP_FILE = '/opt/project/data/mapdata.csv'
-
+P_CRASH = 1.0 / 300.0
+P_CODE = 1.0 / 200.0
+CODES_LIST = ['P0010','P0128','P0171','P0101','P0A0F','P2210','U0001']
 
 class PingEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Ping):
-            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time, 'sequence': obj.sequence}
+            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time, 'sequence': obj.sequence, 'obd_codes': obj.obd_codes}
         else:
             json.JSONEncoder.default(self, obj)
 
@@ -80,12 +82,13 @@ def load():
 
 
 class Ping:
-    def __init__(self, vin, lat, lon, time):
+    def __init__(self, vin, lat, lon, time, codes):
         self.vin = vin
         self.latitude = lat
         self.longitude = lon
         self.time = time
         self.sequence = 0
+        self.obd_codes = codes
 
     def toCSV(self):
         return '{0},{1},{2},{3}'.format(self.vin, self.latitude, self.longitude, self.time)
@@ -113,12 +116,28 @@ class Trace:
 
         self.pings = []
         self.next_ping_index = 0
-        self.pings.append(Ping(self.vin, lat, lon, t))
+        crashed = False
+        self.pings.append(Ping(self.vin, lat, lon, t, []))
         for i in range(ping_count):
             t += PING_INTERVAL
-            lat += latitude_step
-            lon += longitude_step
-            self.pings.append(Ping(self.vin, lat, lon, t))
+            codes = self.pings[-1].obd_codes
+
+            if not crashed:
+                lat += latitude_step
+                lon += longitude_step
+
+                if random.random() < P_CODE:
+                    error_code = random.choice(CODES_LIST)
+                    if error_code in codes:
+                        codes.remove(error_code)
+                    else:
+                        codes.append(error_code)
+
+                if random.random() < P_CRASH:
+                    crashed = True
+                    codes += 'B0001'  #primary air bag deployed
+
+            self.pings.append(Ping(self.vin, lat, lon, t, codes))
 
     def next(self, t):
         """
@@ -135,26 +154,6 @@ class Trace:
 
         return result
 
-    # def next_within_window(self, t_after, t_before, count):
-    #     """
-    #     Returns a (possibly empty) list of all pings that happened after t_after and before t_before
-    #     ping_index is ignored.
-    #     In any case, no more than count results will be returned.
-    #     Results will be in ascending order by time.
-    #     Raises a StopIteration exception when there are no pings that meet the criteria
-    #     """
-    #     result = []
-    #     for ping in self.pings:
-    #         if ping.time > t_after and ping.time < t_before:
-    #             result.append(ping)
-    #             if len(result) == count:
-    #                 break
-    #
-    #     if len(result) == 0:
-    #         raise StopIteration
-    #
-    #     return result
-    #
 
 def random_trace(vin, from_city, to_city, start_time):
     logging.debug('creating random trace from: %s to %s', from_city.name, to_city.name)
