@@ -135,7 +135,7 @@ class Trace:
 
                 if random.random() < P_CRASH:
                     crashed = True
-                    codes += 'B0001'  #primary air bag deployed
+                    codes.append('B0001')  #primary air bag deployed
 
             self.pings.append(Ping(self.vin, lat, lon, t, codes))
 
