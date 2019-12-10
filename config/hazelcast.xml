@@ -20,9 +20,7 @@
         </rest-api>
     </network>
 
-    <hot-restart-persistence enabled="true">
-        <base-dir>/opt/project/hot-restart</base-dir>
-    </hot-restart-persistence>
+    <!-- TODO enable hot restart -->
 
     <event-journal enabled="true">
         <mapName>vehicles</mapName>

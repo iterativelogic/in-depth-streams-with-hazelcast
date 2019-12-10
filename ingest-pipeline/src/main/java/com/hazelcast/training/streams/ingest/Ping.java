@@ -12,6 +12,8 @@ public class Ping implements Serializable {
     private float longitude;
     private float time;
     private int sequence;
+
+    //TODO Lab 4 add a String [] called obd_codes to hold the engine codes
     private String []obd_codes;
 
     public String getVin() {
@@ -50,9 +52,7 @@ public class Ping implements Serializable {
         return sequence;
     }
 
-    public String[] getOBDCodes() {
-        return obd_codes;
-    }
+    //TODO Lab 4: Add getOBDCodes, Update toString to add OBD codes.
 
     @Override
     public String toString() {
@@ -62,7 +62,6 @@ public class Ping implements Serializable {
                 ", longitude=" + longitude +
                 ", time=" + time +
                 ", sequence=" + sequence +
-                ", obd_codes=" + Arrays.toString(obd_codes) +
                 '}';
     }
 }
