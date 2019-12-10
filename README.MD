@@ -33,9 +33,9 @@ To do these labs you will need a laptop with the following:
 
    The student must write a pipeline to ingest GPS pings from 2 sources, transform them into HazelcastJSON instances and sink them to an IMAP.  Requires writing a custom source that supports snapshots and the use of "mapUsingContext".
 
-4. Operating: IN PROGRESS
+4. Operating: DONE
 
-   In this lab the student will make the shift to packaging  Jet pipelines in a jar and deploying to an existing cluster. The student will also configure and test fault tolerance, scale up and down and updating a pipeline with stateful processors.
+   In this lab the student will make the shift to packaging  Jet pipelines in a jar and deploying to an existing cluster. The student will also configure and test fault tolerance, scale up and down, updating a pipeline with stateful processors and hot restart.
 
 5. Enrichment: NOT STARTED
 
