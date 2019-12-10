@@ -1,0 +1,7 @@
+<hazelcast-jet xsi:schemaLocation="http://www.hazelcast.com/schema/jet-config hazelcast-jet-config-3.0.xsd"
+               xmlns="http://www.hazelcast.com/schema/jet-config"
+               xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <instance>
+        <lossless-restart-enabled>true</lossless-restart-enabled>
+    </instance>
+</hazelcast-jet>

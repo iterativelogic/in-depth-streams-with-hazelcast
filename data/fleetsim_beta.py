@@ -1,14 +1,16 @@
 import flask
 import json
 import logging
+import os
 import random
 import time
 import tracegen
 import VinGenerator.vin as vin
 
-RANDOM_SEED = 271
+# RANDOM_SEED = 271
 LOG_LEVEL = logging.DEBUG
 VEHICLE_COUNT = 30
+
 
 
 class InfiniteList:
@@ -55,8 +57,9 @@ class InfiniteList:
 class FleetsimApp(flask.Flask):
     def __init__(self, name):
         super().__init__(name)
-        random.seed(RANDOM_SEED)
+        random.seed()
         logging.basicConfig(level=LOG_LEVEL)
+
         self.map_data = tracegen.load()
         self.map_data_as_list = [city for city in self.map_data.values()]
         self.start_time = time.time()

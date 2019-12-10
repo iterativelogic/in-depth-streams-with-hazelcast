@@ -19,6 +19,7 @@ public class BetaStreamSource {
     private Gson gson;
 
     // current state
+    private long lastPoll = 0;
     private int highestSequence;
     private char [] buffer = new char[10000];
 
@@ -52,6 +53,11 @@ public class BetaStreamSource {
     }
 
     private Ping []poll(float since, int limit){
+        long now = System.currentTimeMillis();
+        if (now - lastPoll < 2000) return new Ping[0];
+
+        lastPoll = now;
+
         // It would be more efficient to keep the connection open but this is more robust since the connection
         // will be rebuilt each time.
         HttpURLConnection connection = null;

@@ -12,7 +12,10 @@ services:
       java
       -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
       -Dhazelcast.config=/opt/project/config/hazelcast.xml
+      -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      -Dhazelcast.logging.type=log4j2
+      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
       com.hazelcast.training.streams.server.Server
 
   jet-server-2:
@@ -24,20 +27,28 @@ services:
       java
       -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
       -Dhazelcast.config=/opt/project/config/hazelcast.xml
+      -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      -Dhazelcast.logging.type=log4j2
+      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
       com.hazelcast.training.streams.server.Server
 
-#  jet-server-3:
-#    container_name: jet-server-3
-#    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
-#    volumes:
-#      - ".:/opt/project"
-#    command: >
-#      java
-#      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
-#      -Dhazelcast.config=/opt/project/config/hazelcast.xml
-#      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
-#      com.hazelcast.training.streams.server.Server
+  jet-server-3:
+    container_name: jet-server-3
+    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+    volumes:
+      - ".:/opt/project"
+    command: >
+      java
+      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
+      -Dhazelcast.config=/opt/project/config/hazelcast.xml
+      -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
+      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+      -Dhazelcast.logging.type=log4j2
+      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
+      com.hazelcast.training.streams.server.Server
+
+
 
   fleetsim-beta:
     container_name: fleetsim-beta

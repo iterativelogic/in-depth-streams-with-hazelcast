@@ -20,6 +20,10 @@
         </rest-api>
     </network>
 
+    <hot-restart-persistence enabled="true">
+        <base-dir>/opt/project/hot-restart</base-dir>
+    </hot-restart-persistence>
+
     <event-journal enabled="true">
         <mapName>vehicles</mapName>
         <capacity>100000</capacity>
