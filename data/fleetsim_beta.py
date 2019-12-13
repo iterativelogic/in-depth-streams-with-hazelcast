@@ -1,16 +1,15 @@
-import flask
 import json
 import logging
-import os
 import random
 import time
+
+import flask
+
 import tracegen
-import VinGenerator.vin as vin
 
 # RANDOM_SEED = 271
 LOG_LEVEL = logging.DEBUG
-VEHICLE_COUNT = 30
-
+VEHICLE_COUNT = 3
 
 
 class InfiniteList:
@@ -65,20 +64,20 @@ class FleetsimApp(flask.Flask):
         self.start_time = time.time()
         starting_cities = [random.choice(self.map_data_as_list) for _ in
                            range(VEHICLE_COUNT)]  # each vehicle starts in a randomly chosen city
+
+        all_vins = tracegen.load_vins(tracegen.VIN_FILE)
+        beta_vins = [vin for vin in all_vins if int(vin[-1]) % 2 == 1]
+        random.shuffle(beta_vins)
+        if len(beta_vins) < VEHICLE_COUNT:
+            raise Exception('Insufficient VIN data available.  Decrease VEHICLE_COUNT')
+        else:
+            beta_vins = beta_vins[0:VEHICLE_COUNT]
+
         self.vehicles = [
-            tracegen.random_trace(FleetsimApp.random_vin(), city, self.map_data[random.choice(city.adjacent_cities)],
-                                  self.start_time)
-            for city in starting_cities]
+            tracegen.random_trace(vin, city, self.map_data[random.choice(city.adjacent_cities)], self.start_time) for
+            vin, city in zip(beta_vins, starting_cities)]
 
         self.pings = InfiniteList(120000)
-
-    @staticmethod
-    def random_vin():
-        result = vin.getRandomVin()
-        while hash(result) % 2 == 0:
-            result = vin.getRandomVin()
-
-        return result
 
 
 app = FleetsimApp(__name__)
@@ -89,7 +88,6 @@ def pings():
     since = int(flask.request.args.get('since', '-1'))
     limit = int(flask.request.args.get('limit', '100000'))
 
-    result = []
     now = time.time()
     for vehicle in app.vehicles:
         try:

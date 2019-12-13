@@ -7,6 +7,7 @@ PING_INTERVAL = 30
 MILES_PER_DEGREE_LATITUDE = 69  # rough approximation
 MILES_PER_DEGREE_LONGITUDE = 54  # very roughly correct for the US latitudes 31 - 41
 MAP_FILE = '/opt/project/data/mapdata.csv'
+VIN_FILE = '/opt/project/data/hsqldb/vins.csv'
 P_CRASH = 1.0 / 300.0
 P_CODE = 1.0 / 200.0
 CODES_LIST = ['P0010','P0128','P0171','P0101','P0A0F','P2210','U0001']
@@ -54,6 +55,29 @@ def parse_dms(dms):
 
     return result
 
+def load_vins(file_name):
+    """
+    returns a dictionary with key=vin and value={'year': year,'make': themake,'model' themodel }
+    """
+    result = dict()
+
+    with open(file_name,'r') as vin_file:
+        curr_line = 0
+        for line in vin_file:
+            curr_line += 1
+            if len(line) > 0:
+                words = [w.strip() for w in line.split(',')]
+                if len(words) != 4:
+                    logging.warning('skipping line %d because it is malformed.',curr_line)
+                    continue
+
+                vin = words[0]
+                year = int(words[1])
+                make = words[2]
+                model = words[3]
+                result[vin] = {'year': year, 'make': make, 'model': model}
+
+    return result
 
 def load():
     result = dict()
@@ -156,7 +180,7 @@ class Trace:
 
 
 def random_trace(vin, from_city, to_city, start_time):
-    logging.debug('creating random trace from: %s to %s', from_city.name, to_city.name)
+    logging.debug('creating random trace from: %s to %s for %s', from_city.name, to_city.name, vin)
     speed = random.gauss(65, 10)
     start_time += random.uniform(0, PING_INTERVAL)
     return Trace(vin, from_city, to_city, speed, start_time)
