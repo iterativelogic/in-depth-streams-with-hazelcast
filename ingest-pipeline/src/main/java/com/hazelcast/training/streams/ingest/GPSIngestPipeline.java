@@ -8,6 +8,7 @@ import com.hazelcast.jet.aggregate.AggregateOperations;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.Tuple2;
+import com.hazelcast.jet.datamodel.Tuple4;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
 
@@ -15,11 +16,11 @@ public class GPSIngestPipeline {
 
     private static long MAXIMUM_LATENESS_MS = 20000;
 
-    public static void main(String []args){
+    public static void main(String[] args) {
 
         JetInstance jet = null;
         String JET_MODE = System.getenv("JET_MODE");
-        if (JET_MODE != null && JET_MODE.equals("LOCAL")){
+        if (JET_MODE != null && JET_MODE.equals("LOCAL")) {
             jet = Jet.newJetInstance();
             jet.getHazelcastInstance().getMap("vehicles").addEntryListener(new DebugMapListener(), true);
         } else {
@@ -40,8 +41,14 @@ public class GPSIngestPipeline {
         jet.newJob(pipeline, config);
     }
 
-    public static Pipeline buildPipeline(String alphaDir, String betaURL){
+    public static Pipeline buildPipeline(String alphaDir, String betaURL) {
         Pipeline pipeline = Pipeline.create();
+
+        BatchStage<Tuple4<String, Integer, String, String>> vehicleTable = pipeline.drawFrom(Sources.jdbc(connectionURL, "SELECT vin, year, make, model FROM vehicles;",
+                resultSet -> Tuple4.tuple4(resultSet.getString(1),
+                        resultSet.getInt(2),
+                        resultSet.getString(3),
+                        resultSet.getString(4))));
 
         StreamStage<String> sourceAlpha = pipeline.drawFrom(Sources.fileWatcher(alphaDir)).withTimestamps(line -> Util.timestampFromSourceAlpha(line), MAXIMUM_LATENESS_MS).setName("Source Alpha");
 
@@ -49,14 +56,16 @@ public class GPSIngestPipeline {
 
         StreamSource<Ping> dataSourceBeta = SourceBuilder.timestampedStream("Beta Web Service", ctx -> BetaStreamSource.create(betaURL))
                 .<Ping>fillBufferFn((streamSource, buffer) -> streamSource.fillBuffer(buffer))
-                .createSnapshotFn( source -> source.snapshot())
-                .restoreSnapshotFn( (source, snapshots) -> source.restore(snapshots.get(0)))
+                .createSnapshotFn(source -> source.snapshot())
+                .restoreSnapshotFn((source, snapshots) -> source.restore(snapshots.get(0)))
                 .build();
 
 
         StreamStage<Ping> sourceBeta = pipeline.drawFrom(dataSourceBeta).withNativeTimestamps(MAXIMUM_LATENESS_MS).setName("Source Beta");
 
         StreamStage<Ping> mergeAlphaAndBeta = sourceBeta.merge(mapToPing).setName("Merge Alpha and Beta");
+
+        
 
         StreamStage<Tuple2<String, HazelcastJsonValue>> jsonStreamStage = mergeAlphaAndBeta.mapUsingContext(ContextFactory.withCreateFn(jet -> new Gson()), (gson, ping) -> Tuple2.tuple2(ping.getVin(), new HazelcastJsonValue(gson.toJson(ping))))
                 .setName("To Map Entry");

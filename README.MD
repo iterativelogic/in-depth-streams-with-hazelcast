@@ -1,5 +1,3 @@
-
-
 # Overview
 
 The In-Depth Stream Processing Course is a 3 day hands-on experience intended to get Java developers ready to use the Hazelcast platform to build solutions that process and react to streaming data in real time.   The lab emphasized how IMDG and Jet features can be used together to deliver insights and actions on fast moving data.
@@ -37,7 +35,7 @@ To do these labs you will need a laptop with the following:
 
    In this lab the student will make the shift to packaging  Jet pipelines in a jar and deploying to an existing cluster. The student will also configure and test fault tolerance, scale up and down, updating a pipeline with stateful processors and hot restart.
 
-5. Enrichment: NOT STARTED
+5. Enrichment: IN PROGRESS
 
    The incoming GPS data will be enriched with vehicle make/model which will require the use of a JDBC source (UMoves vehicle reference data) and a hash join.  Each ping will be classified as being in one particular grid square using a custom class and "mapUsingContext".
 
@@ -47,7 +45,7 @@ To do these labs you will need a laptop with the following:
 
 7. Fleet Monitoring: NOT STARTED
 
-   In this lab, the student will go beyond capturing and displaying GPS pings and will begin to truly produce insights from the stream.  Another new pipeline will be introduced to continuously calculate speed and miles drive.  This will involve a custom aggregator.  Vehicle speed will be categorized (e.g. red/green ) and the category will be pushed to another IMap for display.  An entry processor will be used on the speed category map sink to avoid duplicate updates.  Now UMove will be able to see who is speeding in real time!
+   In this lab, the student will go beyond capturing and displaying GPS pings and will begin to truly produce insights from the stream.  Another new pipeline will be introduced to continuously calculate speed and miles driven.  This will involve a custom aggregator.  Vehicle speed will be categorized (e.g. red/green ) and the category will be pushed to another IMap for display.  An entry processor will be used on the speed category map sink to avoid duplicate updates.  Now UMove will be able to see who is speeding in real time!
 
 8. Area Specific Notifications: NOT STARTED
 
