@@ -33,11 +33,11 @@ To do these labs you will need a laptop with the following:
 
 4. Operating: DONE
 
-   In this lab the student will make the shift to packaging  Jet pipelines in a jar and deploying to an existing cluster. The student will also configure and test fault tolerance, scale up and down, updating a pipeline with stateful processors and hot restart.
+   In this lab the student will make the shift to packaging  Jet pipelines in a jar and deploying to an existing cluster. The student will also configure and test fault tolerance, and scale  a pipeline with stateful processors up and down.  Hot restart will be configured and exercised.  The student will learn how to update an existing pipeline by adding engine diagnostic codes to the ingest pipeline.
 
-5. Enrichment: IN PROGRESS
+5. Automated Crash Detection and Response: IN PROGRESS
 
-   The incoming GPS data will be enriched with vehicle make/model which will require the use of a JDBC source (UMoves vehicle reference data) and a hash join.  Each ping will be classified as being in one particular grid square using a custom class and "mapUsingContext".
+   A new pipeline will be introduce.  It will monitor all pings for certain engine codes that denote a serious crash.  The pipeline will consist of an IMap source and a simple filter on engine codes.  When a crash is detected, the IMDG aggregation API will be used to rapidly locate the closest city so that help can be dispatched.
 
 6. Maintenance Alerts: NOT STARTED
 
