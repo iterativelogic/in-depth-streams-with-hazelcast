@@ -6,6 +6,10 @@ import com.hazelcast.jet.JetInstance;
 public class Server
 {
     public static void main( String[] args ) {
+
         JetInstance jet = Jet.newJetInstance();
+
+        // just to initialize city data
+        jet.getHazelcastInstance().getMap("cities");
     }
 }
