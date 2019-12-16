@@ -1,4 +1,4 @@
-package com.hazelcast.training.streams.ingest;
+package com.hazelcast.training.streams.model;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -13,6 +13,8 @@ public class Ping implements Serializable {
     private float time;
     private int sequence;
     private String []obd_codes;
+    private String status;
+    private String note;
 
     public String getVin() {
         return vin;
@@ -54,6 +56,23 @@ public class Ping implements Serializable {
         return obd_codes;
     }
 
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getNote() {
+        return note;
+    }
+
+    public void setNote(String note) {
+        this.note = note;
+    }
+
+
     @Override
     public String toString() {
         return "Ping{" +
@@ -63,6 +82,8 @@ public class Ping implements Serializable {
                 ", time=" + time +
                 ", sequence=" + sequence +
                 ", obd_codes=" + Arrays.toString(obd_codes) +
+                ", status='" + status + '\'' +
+                ", note='" + note + '\'' +
                 '}';
     }
 }

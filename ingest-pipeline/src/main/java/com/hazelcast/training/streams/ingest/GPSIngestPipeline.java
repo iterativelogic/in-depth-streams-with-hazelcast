@@ -11,6 +11,7 @@ import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.datamodel.Tuple4;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
+import com.hazelcast.training.streams.model.Ping;
 
 public class GPSIngestPipeline {
 
@@ -43,12 +44,6 @@ public class GPSIngestPipeline {
 
     public static Pipeline buildPipeline(String alphaDir, String betaURL) {
         Pipeline pipeline = Pipeline.create();
-
-        BatchStage<Tuple4<String, Integer, String, String>> vehicleTable = pipeline.drawFrom(Sources.jdbc(connectionURL, "SELECT vin, year, make, model FROM vehicles;",
-                resultSet -> Tuple4.tuple4(resultSet.getString(1),
-                        resultSet.getInt(2),
-                        resultSet.getString(3),
-                        resultSet.getString(4))));
 
         StreamStage<String> sourceAlpha = pipeline.drawFrom(Sources.fileWatcher(alphaDir)).withTimestamps(line -> Util.timestampFromSourceAlpha(line), MAXIMUM_LATENESS_MS).setName("Source Alpha");
 
