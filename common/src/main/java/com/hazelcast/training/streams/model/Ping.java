@@ -56,6 +56,14 @@ public class Ping implements Serializable {
         return obd_codes;
     }
 
+    public void setSequence(int sequence) {
+        this.sequence = sequence;
+    }
+
+    public void setObd_codes(String[] obd_codes) {
+        this.obd_codes = obd_codes;
+    }
+
     public String getStatus() {
         return status;
     }

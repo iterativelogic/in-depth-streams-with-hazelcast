@@ -8,9 +8,11 @@ services:
     image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
     volumes:
       - ".:/opt/project"
+    environment:
+      CITY_DATA_FILE: /opt/project/data/mapdata.csv
     command: >
       java
-      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
+      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar:/opt/project/vehicle-monitor-pipeline/target/vehicle-monitor-pipeline-1.0-SNAPSHOT.jar:/opt/project/ingest-pipeline/target/ingest-pipeline-1.0-SNAPSHOT.jar
       -Dhazelcast.config=/opt/project/config/hazelcast.xml
       -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
@@ -23,15 +25,35 @@ services:
     image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
     volumes:
       - ".:/opt/project"
+    environment:
+      CITY_DATA_FILE: /opt/project/data/mapdata.csv
     command: >
       java
-      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
+      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar:/opt/project/vehicle-monitor-pipeline/target/vehicle-monitor-pipeline-1.0-SNAPSHOT.jar:/opt/project/ingest-pipeline/target/ingest-pipeline-1.0-SNAPSHOT.jar
       -Dhazelcast.config=/opt/project/config/hazelcast.xml
       -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
       -Dhazelcast.logging.type=log4j2
       -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
       com.hazelcast.training.streams.server.Server
+
+#  jet-server-3:
+#    container_name: jet-server-3
+#    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+#    volumes:
+#      - ".:/opt/project"
+#    environment:
+#      CITY_DATA_FILE: /opt/project/data/mapdata.csv
+#    command: >
+#      java
+#      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
+#      -Dhazelcast.config=/opt/project/config/hazelcast.xml
+#      -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
+#      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
+#      -Dhazelcast.logging.type=log4j2
+#      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
+#      com.hazelcast.training.streams.server.Server
+
 
 
   fleetsim-beta:
@@ -55,16 +77,6 @@ services:
       - ".:/opt/project"
     working_dir: /opt/project/data
     command: python fleetsim_alpha.py
-
-  hsqldb:
-    container_name: hsqldb
-    image: openjdk:8u201-jre-alpine
-    working_dir: /opt/project/data/hsqldb
-    volumes:
-      - ".:/opt/project"
-    ports:
-      - 9001:9001
-    command: java -cp hsqldb.jar org.hsqldb.server.Server -database.0 file:umove --dbname.0 umove
 
   mapserver:
     container_name: mapserver

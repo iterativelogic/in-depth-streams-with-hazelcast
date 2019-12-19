@@ -4,22 +4,21 @@ import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
-import com.hazelcast.jet.aggregate.AggregateOperations;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
-import com.hazelcast.jet.datamodel.Tuple2;
-import com.hazelcast.jet.datamodel.Tuple4;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
 import com.hazelcast.training.streams.model.Ping;
 
-public class GPSIngestPipeline {
+import java.io.Serializable;
+
+public class GPSIngestPipeline implements Serializable {
 
     private static long MAXIMUM_LATENESS_MS = 20000;
 
     public static void main(String[] args) {
 
-        JetInstance jet = null;
+        JetInstance jet;
         String JET_MODE = System.getenv("JET_MODE");
         if (JET_MODE != null && JET_MODE.equals("LOCAL")) {
             jet = Jet.newJetInstance();
@@ -60,12 +59,27 @@ public class GPSIngestPipeline {
 
         StreamStage<Ping> mergeAlphaAndBeta = sourceBeta.merge(mapToPing).setName("Merge Alpha and Beta");
 
-        StreamStage<Tuple2<String, HazelcastJsonValue>> jsonStreamStage = mergeAlphaAndBeta.mapUsingContext(ContextFactory.withCreateFn(jet -> new Gson()), (gson, ping) -> Tuple2.tuple2(ping.getVin(), new HazelcastJsonValue(gson.toJson(ping))))
-                .setName("To Map Entry");
-
-        jsonStreamStage.drainTo(Sinks.map("vehicles"));
+        mergeAlphaAndBeta.drainTo(Sinks.mapWithUpdating("vehicles", (Ping p) -> p.getVin(), (HazelcastJsonValue oldVal, Ping ping) -> update(oldVal, ping))).setName("Update Vehicle Location");
 
         return pipeline;
     }
 
+    private static Gson gson = new Gson();
+
+
+    private static HazelcastJsonValue update(HazelcastJsonValue oldVal, Ping newVal){
+        Ping result;
+        if (oldVal == null){
+            result = newVal;
+        } else {
+            Ping oldPing = gson.fromJson(oldVal.toString(), Ping.class);
+            oldPing.setLatitude(newVal.getLatitude());
+            oldPing.setLongitude(newVal.getLongitude());
+            oldPing.setTime(newVal.getTime());
+            oldPing.setSequence(newVal.getSequence());
+            result = oldPing;
+        }
+
+        return new HazelcastJsonValue(gson.toJson(result));
+    }
 }
