@@ -1,9 +1,6 @@
 package com.hazelcast.training.streams.monitor;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.core.IMap;
 import com.hazelcast.jet.Jet;
@@ -14,11 +11,13 @@ import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
 import com.hazelcast.training.streams.model.City;
+import com.hazelcast.training.streams.model.Ping;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Map;
 
-public class VehicleMonitorPipeline {
+public class VehicleMonitorPipeline implements Serializable {
 
     private static long MAXIMUM_LATENESS_MS = 20000;
 
@@ -49,7 +48,9 @@ public class VehicleMonitorPipeline {
 
         StreamStage<Tuple2<String, String>> closestCity = crashes.mapUsingContext(ContextFactory.withCreateFn(jet -> jet.getHazelcastInstance().<String, City>getMap("cities")), (map, entry) -> Tuple2.tuple2(entry.getKey(), closestCity(map, entry.getValue().toString()))).setName("find closest city");
 
-        closestCity.drainTo(Sinks.logger(entry -> String.format("CRASH DETECTED: %s CLOSEST CITY IS: %s", entry.f0(), entry.f1()))).setName("Log Crashes");
+        closestCity.drainTo(Sinks.mapWithUpdating("vehicles", (Tuple2<String, String> item) -> item.f0(),  (HazelcastJsonValue oldVal, Tuple2<String,String> newVal) -> update(oldVal, newVal) )).setName("Update vehicles map");
+
+        closestCity.drainTo(Sinks.logger(entry -> String.format("CRASH DETECTED: %s HELP DISPATCHED FROM: %s", entry.f0(), entry.f1()))).setName("Dispatch Help");
         return pipeline;
     }
 
@@ -81,12 +82,28 @@ public class VehicleMonitorPipeline {
         return result;
     }
 
-    public static String closestCity(IMap<String, City> cityMap, String jsonPing){
-        JsonObject ping = JsonParser.parseString(jsonPing).getAsJsonObject();
-        double pingLat = ping.get("latitude").getAsFloat();
-        double pingLon = ping.get("longitude").getAsFloat();
+    private static HazelcastJsonValue update(HazelcastJsonValue oldVal, Tuple2<String,String> newVal){
+        Ping result;
+        if (oldVal == null){
+            // should never happen!
+            result = new Ping();
+            result.setVin(newVal.f0());
+        } else {
+            Ping oldPing = gson.fromJson(oldVal.toString(), Ping.class);
+            oldPing.setStatus("CRASHED");
+            oldPing.setNote(String.format("help dispatched from %s", newVal.f1()));
+            result = oldPing;
+        }
 
-        return cityMap.aggregate(new ClosestCityAggregator(pingLat, pingLon));
+        return new HazelcastJsonValue(gson.toJson(result));
+    }
+
+    private static Gson gson = new Gson();
+
+    public static String closestCity(IMap<String, City> cityMap, String jsonPing){
+        Ping ping = gson.fromJson(jsonPing, Ping.class);
+
+        return cityMap.aggregate(new ClosestCityAggregator(ping.getLatitude(), ping.getLongitude()));
     }
 
     public static double distance(double lat1, double lon1, double lat2, double lon2){

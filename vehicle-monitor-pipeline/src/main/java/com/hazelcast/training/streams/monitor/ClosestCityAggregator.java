@@ -1,12 +1,17 @@
 package com.hazelcast.training.streams.monitor;
 
 import com.hazelcast.aggregation.Aggregator;
+import com.hazelcast.config.Config;
+import com.hazelcast.logging.ILogger;
+import com.hazelcast.logging.Logger;
 import com.hazelcast.training.streams.model.City;
 
 import java.io.Serializable;
 import java.util.Map;
 
 public class ClosestCityAggregator extends Aggregator<Map.Entry<String, City>, String> implements Serializable {
+
+    private static ILogger log = Logger.getLogger(ClosestCityAggregator.class);
 
     public ClosestCityAggregator(double lat, double lon){
         vehicleLat = lat;
@@ -22,16 +27,18 @@ public class ClosestCityAggregator extends Aggregator<Map.Entry<String, City>, S
     @Override
     public void accumulate(Map.Entry<String, City> entry) {
         double d = distance(vehicleLat, vehicleLon, entry.getValue().getLatitude(), entry.getValue().getLongitude());
+        log.fine("distance to " + entry.getKey() + " is " + d);
         if (closestCity == null || d < closestCityDistance){
             closestCityDistance = d;
             closestCity = entry.getKey();
+            log.fine(closestCity + " is the new closest city");
         }
     }
 
     @Override
     public void combine(Aggregator aggregator) {
         ClosestCityAggregator otherAggregator = this.getClass().cast(aggregator);
-        if (otherAggregator.closestCity != null && otherAggregator.closestCityDistance < closestCityDistance){
+        if (closestCity == null || (otherAggregator.closestCity != null && otherAggregator.closestCityDistance < closestCityDistance)){
             closestCity = otherAggregator.closestCity;
             closestCityDistance = otherAggregator.closestCityDistance;
         }
@@ -39,6 +46,7 @@ public class ClosestCityAggregator extends Aggregator<Map.Entry<String, City>, S
 
     @Override
     public String aggregate() {
+        log.fine("CLOSEST CITY IS " + closestCity);
         return closestCity;
     }
 
@@ -56,5 +64,6 @@ public class ClosestCityAggregator extends Aggregator<Map.Entry<String, City>, S
 
         return Math.abs(distance);
     }
+
 
 }
