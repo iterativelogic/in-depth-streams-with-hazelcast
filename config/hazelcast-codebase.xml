@@ -20,34 +20,18 @@
         </rest-api>
     </network>
 
+    <lite-member enabled="true"/>
+    
+    <member-attributes>
+        <attribute name="CODEBASE">true</attribute>
+    </member-attributes>
+
     <user-code-deployment enabled="true">
         <class-cache-mode>OFF</class-cache-mode>
         <provider-mode>LOCAL_CLASSES_ONLY</provider-mode>
         <provider-filter>HAS_ATTRIBUTE:CODEBASE</provider-filter>
         <whitelist-prefixes>com.hazelcast.training</whitelist-prefixes>
     </user-code-deployment>
-
-
-    <hot-restart-persistence enabled="true">
-        <base-dir>/opt/project/hot-restart</base-dir>
-    </hot-restart-persistence>
-
-    <event-journal enabled="true">
-        <mapName>vehicles</mapName>
-        <capacity>100000</capacity>
-        <time-to-live-seconds>3600</time-to-live-seconds>
-    </event-journal>
-
-    <map name="vehicles">
-        <in-memory-format>OBJECT</in-memory-format>
-    </map>
-
-    <map name="cities">
-        <in-memory-format>OBJECT</in-memory-format>
-        <map-store enabled="true" initial-mode="EAGER">
-            <class-name>com.hazelcast.training.streams.server.CityMapLoader</class-name>
-        </map-store>
-    </map>
 
     <properties>
         <property name="hazelcast.initial.min.cluster.size">2</property>

@@ -81,23 +81,31 @@ public class VehicleMonitorPipeline {
         return result;
     }
 
+//    public static String closestCity(IMap<String, City> cityMap, String jsonPing){
+//        JsonObject ping = JsonParser.parseString(jsonPing).getAsJsonObject();
+//        double pingLat = ping.get("latitude").getAsFloat();
+//        double pingLon = ping.get("longitude").getAsFloat();
+//
+//        // this is only OK because the city list is short
+//        double closestDistance = 0.0;
+//        String closestCity = null;
+//        for(City city: cityMap.values()){
+//            double d = distance(pingLat, pingLon, city.getLatitude(), city.getLongitude());
+//            if (closestCity == null || d < closestDistance){
+//                closestCity = city.getName();
+//                closestDistance = d;
+//            }
+//        }
+//
+//        return closestCity;
+//    }
+
     public static String closestCity(IMap<String, City> cityMap, String jsonPing){
         JsonObject ping = JsonParser.parseString(jsonPing).getAsJsonObject();
         double pingLat = ping.get("latitude").getAsFloat();
         double pingLon = ping.get("longitude").getAsFloat();
 
-        // this is only OK because the city list is short
-        double closestDistance = 0.0;
-        String closestCity = null;
-        for(City city: cityMap.values()){
-            double d = distance(pingLat, pingLon, city.getLatitude(), city.getLongitude());
-            if (closestCity == null || d < closestDistance){
-                closestCity = city.getName();
-                closestDistance = d;
-            }
-        }
-
-        return closestCity;
+        return cityMap.aggregate(new ClosestCityAggregator(pingLat, pingLon));
     }
 
     public static double distance(double lat1, double lon1, double lat2, double lon2){
