@@ -10,9 +10,9 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ingest-pipeline</artifactId>
+    <artifactId>vehicle-monitor-pipeline</artifactId>
 
-    <name>ingest-pipeline</name>
+    <name>vehicle-monitor-pipeline</name>
 
     <build>
         <plugins>
@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.hazelcast.training.streams.ingest.GPSIngestPipeline</mainClass>
+                            <mainClass>com.hazelcast.training.streams.monitor.VehicleMonitorPipeline</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
