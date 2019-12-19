@@ -8,8 +8,8 @@ MILES_PER_DEGREE_LATITUDE = 69  # rough approximation
 MILES_PER_DEGREE_LONGITUDE = 54  # very roughly correct for the US latitudes 31 - 41
 MAP_FILE = '/opt/project/data/mapdata.csv'
 VIN_FILE = '/opt/project/data/hsqldb/vins.csv'
-P_CRASH = 1.0 / 300.0
-P_CODE = 1.0 / 200.0
+P_CRASH = 1.0 / 600.0
+P_CODE = 1.0 / 300.0
 CODES_LIST = ['P0010','P0128','P0171','P0101','P0A0F','P2210','U0001']
 
 class PingEncoder(json.JSONEncoder):
