@@ -21,7 +21,7 @@ def output(vehicle_id, ping_list):
 
 
 if __name__ == '__main__':
-    random.seed(RANDOM_SEED)
+    random.seed()
     logging.basicConfig(level=LOG_LEVEL)
     map_data = tracegen.load()
     map_data_as_list = [city for city in map_data.values()]
