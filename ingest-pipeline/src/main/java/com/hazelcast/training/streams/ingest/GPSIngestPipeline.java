@@ -77,6 +77,7 @@ public class GPSIngestPipeline implements Serializable {
             oldPing.setLongitude(newVal.getLongitude());
             oldPing.setTime(newVal.getTime());
             oldPing.setSequence(newVal.getSequence());
+            oldPing.setObd_codes(newVal.getOBDCodes());
             result = oldPing;
         }
 
