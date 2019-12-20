@@ -9,7 +9,5 @@ public class Server
 
         JetInstance jet = Jet.newJetInstance();
 
-        // just to initialize city data
-        jet.getHazelcastInstance().getMap("cities");
     }
 }

@@ -20,6 +20,12 @@
         </rest-api>
     </network>
 
+    <user-code-deployment enabled="true">
+        <class-cache-mode>OFF</class-cache-mode>
+        <provider-mode>OFF</provider-mode>
+        <provider-filter>HAS_ATTRIBUTE:codebase</provider-filter>
+    </user-code-deployment>
+
     <event-journal enabled="true">
         <mapName>vehicles</mapName>
         <capacity>100000</capacity>

@@ -22,7 +22,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.hazelcast.training.streams.ingest.GPSIngestPipeline</mainClass>
+                            <mainClass>com.hazelcast.training.streams.ingest.SimpleMapSinkPipeline</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -51,11 +51,6 @@
             <artifactId>hazelcast-jet-enterprise</artifactId>
             <!-- for local work, comment this out -->
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.hsqldb</groupId>
-            <artifactId>hsqldb</artifactId>
-            <version>2.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.hazelcast.training</groupId>

@@ -20,19 +20,16 @@
         </rest-api>
     </network>
 
-    <event-journal enabled="true">
-        <mapName>vehicles</mapName>
-        <capacity>100000</capacity>
-        <time-to-live-seconds>3600</time-to-live-seconds>
-    </event-journal>
+    <lite-member enabled="true"/>
 
-    <map name="vehicles">
-        <in-memory-format>OBJECT</in-memory-format>
-        <entry-listeners>
-            <entry-listener include-value="true">com.hazelcast.training.streams.server.DebugMapListener</entry-listener>
-        </entry-listeners>
-    </map>
+    <user-code-deployment enabled="true">
+        <class-cache-mode>OFF</class-cache-mode>
+        <provider-mode>LOCAL_CLASSES_ONLY</provider-mode>
+    </user-code-deployment>
 
+    <member-attributes>
+        <attribute name="codebase">true</attribute>
+    </member-attributes>
 
     <properties>
         <property name="hazelcast.initial.min.cluster.size">2</property>
