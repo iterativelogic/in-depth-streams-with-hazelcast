@@ -47,6 +47,7 @@ public class BetaStreamSource {
 
     public int snapshot(){
         // TODO - implement this to save the current position of the stream
+        return 0;
     }
 
     public void restore(int seq){
