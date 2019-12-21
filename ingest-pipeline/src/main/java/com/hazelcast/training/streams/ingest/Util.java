@@ -1,5 +1,7 @@
 package com.hazelcast.training.streams.ingest;
 
+import com.hazelcast.training.streams.model.Ping;
+
 public class Util {
     public static long timestampFromSourceAlpha(String line){
         String []words = line.split(",");

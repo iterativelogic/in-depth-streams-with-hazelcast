@@ -3,7 +3,6 @@ import os.path
 import random
 import time
 import tracegen
-import VinGenerator.vin as vin
 
 RANDOM_SEED = 271
 LOG_LEVEL = logging.DEBUG
@@ -21,27 +20,27 @@ def output(vehicle_id, ping_list):
             print(ping.toCSV(), sep=',', file=outfile)
 
 
-def random_vin():
-    result = vin.getRandomVin()
-    while hash(result) % 2 == 1:
-        result = vin.getRandomVin()
-
-    return result
-
-
 if __name__ == '__main__':
-    random.seed(RANDOM_SEED)
+    random.seed()
     logging.basicConfig(level=LOG_LEVEL)
     map_data = tracegen.load()
     map_data_as_list = [city for city in map_data.values()]
 
     # create a trace for each truck - step through simulation time second by second
     start_time = time.time()
-    starting_cities = [random.choice(map_data_as_list) for _ in
-                       range(VEHICLE_COUNT)]  # each vehicle starts in a randomly chosen city
-    vehicles = [
-        tracegen.random_trace(random_vin(), city, map_data[random.choice(city.adjacent_cities)], start_time) for
-        city in starting_cities]
+    # each vehicle starts in a randomly chosen city
+    starting_cities = [random.choice(map_data_as_list) for _ in range(VEHICLE_COUNT)]
+
+    all_vins = tracegen.load_vins(tracegen.VIN_FILE)
+    alpha_vins = [vin for vin in all_vins if int(vin[-1]) % 2 == 0]
+    random.shuffle(alpha_vins)
+    if len(alpha_vins) < VEHICLE_COUNT:
+        raise Exception('Insufficient VIN data available.  Decrease VEHICLE_COUNT')
+    else:
+        alpha_vins = alpha_vins[0:VEHICLE_COUNT]
+
+    vehicles = [tracegen.random_trace(vin, city, map_data[random.choice(city.adjacent_cities)], start_time) for
+                city, vin in zip(starting_cities, alpha_vins)]
 
     next_wakeup = start_time + 1
     while True:

@@ -4,22 +4,23 @@ import com.google.gson.Gson;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
-import com.hazelcast.jet.aggregate.AggregateOperations;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
-import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
+import com.hazelcast.training.streams.model.Ping;
 
-public class GPSIngestPipeline {
+import java.io.Serializable;
+
+public class GPSIngestPipeline implements Serializable {
 
     private static long MAXIMUM_LATENESS_MS = 20000;
 
-    public static void main(String []args){
+    public static void main(String[] args) {
 
-        JetInstance jet = null;
+        JetInstance jet;
         String JET_MODE = System.getenv("JET_MODE");
-        if (JET_MODE != null && JET_MODE.equals("LOCAL")){
+        if (JET_MODE != null && JET_MODE.equals("LOCAL")) {
             jet = Jet.newJetInstance();
             jet.getHazelcastInstance().getMap("vehicles").addEntryListener(new DebugMapListener(), true);
         } else {
@@ -41,13 +42,35 @@ public class GPSIngestPipeline {
         jet.newJob(pipeline);
     }
 
-    public static Pipeline buildPipeline(String alphaDir, String betaURL){
+    public static Pipeline buildPipeline(String alphaDir, String betaURL) {
         Pipeline pipeline = Pipeline.create();
 
-        // TODO - build a pipeline to ingest both alpha and beta data sources, convert them to
+        // TODO in lab 3 - build a pipeline to ingest both alpha and beta data sources, convert them to
         //        map entries and save them in the "vehicles" map.
 
+
+        //TODO in lab 5 - update the ingest pipeline to use Sinks.mapWithUpdating
         return pipeline;
     }
 
+    private static Gson gson = new Gson();
+
+
+    // Utility method for Lab 5 - updates a HazelcastJsonValue with location and time from a Ping object
+    private static HazelcastJsonValue update(HazelcastJsonValue oldVal, Ping newVal){
+        Ping result;
+        if (oldVal == null){
+            result = newVal;
+        } else {
+            Ping oldPing = gson.fromJson(oldVal.toString(), Ping.class);
+            oldPing.setLatitude(newVal.getLatitude());
+            oldPing.setLongitude(newVal.getLongitude());
+            oldPing.setTime(newVal.getTime());
+            oldPing.setSequence(newVal.getSequence());
+            // oldPing.setObd_codes(newVal.getOBDCodes()); BE SURE TO uncomment for Lab 5!
+            result = oldPing;
+        }
+
+        return new HazelcastJsonValue(gson.toJson(result));
+    }
 }

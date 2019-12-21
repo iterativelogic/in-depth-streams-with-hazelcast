@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.hazelcast.jet.pipeline.SourceBuilder;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.Logger;
+import com.hazelcast.training.streams.model.Ping;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -1,3 +1,4 @@
+import copy
 import json
 import logging
 import math
@@ -7,14 +8,17 @@ PING_INTERVAL = 30
 MILES_PER_DEGREE_LATITUDE = 69  # rough approximation
 MILES_PER_DEGREE_LONGITUDE = 54  # very roughly correct for the US latitudes 31 - 41
 MAP_FILE = '/opt/project/data/mapdata.csv'
-P_CRASH = 1.0 / 300.0
-P_CODE = 1.0 / 200.0
-CODES_LIST = ['P0010','P0128','P0171','P0101','P0A0F','P2210','U0001']
+VIN_FILE = '/opt/project/data/hsqldb/vins.csv'
+P_CRASH = 1.0 / 120.0  # artificially high so we can see crashes happen
+P_CODE = 1.0 / 120.0
+CODES_LIST = ['P0010', 'P0128', 'P0171', 'P0101', 'P0A0F', 'P2210', 'U0001']
+
 
 class PingEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, Ping):
-            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time, 'sequence': obj.sequence, 'obd_codes': obj.obd_codes}
+            return {'vin': obj.vin, 'latitude': obj.latitude, 'longitude': obj.longitude, 'time': obj.time,
+                    'sequence': obj.sequence, 'obd_codes': obj.obd_codes}
         else:
             json.JSONEncoder.default(self, obj)
 
@@ -51,6 +55,31 @@ def parse_dms(dms):
         result = -1.0 * (-1.0 * d + m / 60 + s / 3600)
     else:
         result = d + m / 60 + s / 3600
+
+    return result
+
+
+def load_vins(file_name):
+    """
+    returns a dictionary with key=vin and value={'year': year,'make': themake,'model' themodel }
+    """
+    result = dict()
+
+    with open(file_name, 'r') as vin_file:
+        curr_line = 0
+        for line in vin_file:
+            curr_line += 1
+            if len(line) > 0:
+                words = [w.strip() for w in line.split(',')]
+                if len(words) != 4:
+                    logging.warning('skipping line %d because it is malformed.', curr_line)
+                    continue
+
+                vin = words[0]
+                year = int(words[1])
+                make = words[2]
+                model = words[3]
+                result[vin] = {'year': year, 'make': make, 'model': model}
 
     return result
 
@@ -120,7 +149,7 @@ class Trace:
         self.pings.append(Ping(self.vin, lat, lon, t, []))
         for i in range(ping_count):
             t += PING_INTERVAL
-            codes = self.pings[-1].obd_codes
+            codes = copy.copy(self.pings[-1].obd_codes)
 
             if not crashed:
                 lat += latitude_step
@@ -135,7 +164,7 @@ class Trace:
 
                 if random.random() < P_CRASH:
                     crashed = True
-                    codes.append('B0001')  #primary air bag deployed
+                    codes.append('B0001')  # primary air bag deployed
 
             self.pings.append(Ping(self.vin, lat, lon, t, codes))
 
@@ -156,7 +185,7 @@ class Trace:
 
 
 def random_trace(vin, from_city, to_city, start_time):
-    logging.debug('creating random trace from: %s to %s', from_city.name, to_city.name)
+    logging.debug('creating random trace from: %s to %s for %s', from_city.name, to_city.name, vin)
     speed = random.gauss(65, 10)
     start_time += random.uniform(0, PING_INTERVAL)
     return Trace(vin, from_city, to_city, speed, start_time)
