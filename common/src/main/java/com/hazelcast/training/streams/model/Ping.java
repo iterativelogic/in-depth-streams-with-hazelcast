@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 
 /*
- * Ping is used as a convenience within the ingest stream (only)
+ * Ping is used as a convenience within the Jet pipelines
  */
 public class Ping implements Serializable {
     private String vin;
