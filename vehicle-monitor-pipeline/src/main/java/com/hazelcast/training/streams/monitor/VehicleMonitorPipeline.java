@@ -41,18 +41,12 @@ public class VehicleMonitorPipeline implements Serializable {
     public static Pipeline buildPipeline() {
         Pipeline pipeline = Pipeline.create();
 
-        StreamStage<Map.Entry<String, HazelcastJsonValue>> vehicles = pipeline.drawFrom(Sources.<String, HazelcastJsonValue>mapJournal("vehicles", JournalInitialPosition.START_FROM_CURRENT))
-                .withTimestamps(entry -> extractTimestampFromPingEntry(entry.getValue().toString()), MAXIMUM_LATENESS_MS);
+        // TODO in Lab 5 - Create a pipeline to monitor for crashes
 
-        StreamStage<Map.Entry<String, HazelcastJsonValue>> crashes = vehicles.<ArrayList<String>>filterStateful(ArrayList::new, (state, entry) -> isCrashed(state, entry.getValue().toString())).setName("filter crashes");
-
-        StreamStage<Tuple2<String, String>> closestCity = crashes.mapUsingContext(ContextFactory.withCreateFn(jet -> jet.getHazelcastInstance().<String, City>getMap("cities")), (map, entry) -> Tuple2.tuple2(entry.getKey(), closestCity(map, entry.getValue().toString()))).setName("find closest city");
-
-        closestCity.drainTo(Sinks.mapWithUpdating("vehicles", (Tuple2<String, String> item) -> item.f0(),  (HazelcastJsonValue oldVal, Tuple2<String,String> newVal) -> update(oldVal, newVal) )).setName("Update vehicles map");
-
-        closestCity.drainTo(Sinks.logger(entry -> String.format("CRASH DETECTED: %s HELP DISPATCHED FROM: %s", entry.f0(), entry.f1()))).setName("Dispatch Help");
         return pipeline;
     }
+
+    /**************** Utility Methods *******************/
 
     public static long extractTimestampFromPingEntry(String pingAsJson){
         JsonElement pingElement = JsonParser.parseString(pingAsJson);
@@ -60,6 +54,8 @@ public class VehicleMonitorPipeline implements Serializable {
         return (long) timestamp * 1000;
     }
 
+    // Identifies Pings of crashed vehicles.  If the vehicle has already been identified as a crashed vehicle,
+    // return false. For new crashes, return true and add them to the list of known crashes
     public static boolean isCrashed(ArrayList<String> knownCrashes, String pingAsJson){
         boolean result = false;
         JsonObject ping = JsonParser.parseString(pingAsJson).getAsJsonObject();
@@ -82,6 +78,8 @@ public class VehicleMonitorPipeline implements Serializable {
         return result;
     }
 
+    // given a vin, city tuple, update ONLY the status and note fields of the existing map entry and
+    // return it as a HazelcastJsonValue
     private static HazelcastJsonValue update(HazelcastJsonValue oldVal, Tuple2<String,String> newVal){
         Ping result;
         if (oldVal == null){
@@ -100,24 +98,11 @@ public class VehicleMonitorPipeline implements Serializable {
 
     private static Gson gson = new Gson();
 
+    // invoke the closest city aggregator
     public static String closestCity(IMap<String, City> cityMap, String jsonPing){
         Ping ping = gson.fromJson(jsonPing, Ping.class);
 
         return cityMap.aggregate(new ClosestCityAggregator(ping.getLatitude(), ping.getLongitude()));
     }
 
-    public static double distance(double lat1, double lon1, double lat2, double lon2){
-        double R = 6371000;
-
-        double phi1 = Math.toRadians(lat1);
-        double phi2 = Math.toRadians(lat2);
-        double deltaPhi = phi2- phi1;
-        double deltaLambda = Math.toRadians(lon2) - Math.toRadians(lon1);
-
-        double a = Math.pow(Math.sin(deltaPhi / 2.0), 2.0) + Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2.0), 2.0);
-        double c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
-        double distance = R*c;
-
-        return Math.abs(distance);
-    }
 }

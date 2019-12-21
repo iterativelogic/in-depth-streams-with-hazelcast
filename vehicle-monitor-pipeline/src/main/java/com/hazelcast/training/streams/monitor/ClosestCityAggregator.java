@@ -26,28 +26,18 @@ public class ClosestCityAggregator extends Aggregator<Map.Entry<String, City>, S
 
     @Override
     public void accumulate(Map.Entry<String, City> entry) {
-        double d = distance(vehicleLat, vehicleLon, entry.getValue().getLatitude(), entry.getValue().getLongitude());
-        log.fine("distance to " + entry.getKey() + " is " + d);
-        if (closestCity == null || d < closestCityDistance){
-            closestCityDistance = d;
-            closestCity = entry.getKey();
-            log.fine(closestCity + " is the new closest city");
-        }
+        //TODO in Lab 5
     }
 
     @Override
     public void combine(Aggregator aggregator) {
-        ClosestCityAggregator otherAggregator = this.getClass().cast(aggregator);
-        if (closestCity == null || (otherAggregator.closestCity != null && otherAggregator.closestCityDistance < closestCityDistance)){
-            closestCity = otherAggregator.closestCity;
-            closestCityDistance = otherAggregator.closestCityDistance;
-        }
+        // TODO in Lab 5
     }
 
     @Override
     public String aggregate() {
-        log.fine("CLOSEST CITY IS " + closestCity);
-        return closestCity;
+        // TODO in Lab 5
+        return null;
     }
 
     public static double distance(double lat1, double lon1, double lat2, double lon2){
