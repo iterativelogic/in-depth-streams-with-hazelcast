@@ -35,15 +35,15 @@ To do these labs you will need a laptop with the following:
 
    In this lab the student will make the shift to packaging  Jet pipelines in a jar and deploying to an existing cluster. The student will also configure and test fault tolerance, and scale  a pipeline with stateful processors up and down.  Hot restart will be configured and exercised.  The student will learn how to update an existing pipeline by adding engine diagnostic codes to the ingest pipeline.
 
-5. Automated Crash Detection and Response: IN PROGRESS
+5. Automated Crash Detection and Response: DONE
 
    A new pipeline will be introduce.  It will monitor all pings for certain engine codes that denote a serious crash.  The pipeline will consist of an IMap source and a simple filter on engine codes.  When a crash is detected, the IMDG aggregation API will be used to rapidly locate the closest city so that help can be dispatched.
 
-6. Maintenance Alerts: NOT STARTED
+6. Maintenance Alerts: DONE
 
    A new pipeline will be developed to support the delivery of make/model specific maintenance alerts to the fleet's operators.  The flat map operation will be introduced.
 
-7. Fleet Monitoring: NOT STARTED
+7. Fleet Monitoring: IN PROGRESS
 
    In this lab, the student will go beyond capturing and displaying GPS pings and will begin to truly produce insights from the stream.  Another new pipeline will be introduced to continuously calculate speed and miles driven.  This will involve a custom aggregator.  Vehicle speed will be categorized (e.g. red/green ) and the category will be pushed to another IMap for display.  An entry processor will be used on the speed category map sink to avoid duplicate updates.  Now UMove will be able to see who is speeding in real time!
 
