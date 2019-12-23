@@ -37,36 +37,13 @@ public class MaintenanceAlertJob implements Serializable {
         String noticeDir = args[0];
         String jdbcConnection = args[1];
 
-        JobConfig config = new JobConfig();
-        config.setProcessingGuarantee(ProcessingGuarantee.AT_LEAST_ONCE);
-        config.setSnapshotIntervalMillis(10 * 1000);
-
-        Pipeline pipeline = buildPipeline(noticeDir, jdbcConnection);
-        jet.newJob(pipeline, config).join();
+        //TODO for Lab 6: build and run the maintenance alert pipeline.  Don't forget to wait for the job to finish.
     }
 
     public static Pipeline buildPipeline(String noticeDir, String jdbcConnection) {
         Pipeline pipeline = Pipeline.create();
 
-        BatchStage<String> maintenanceNoticeLines = pipeline.drawFrom(Sources.files(noticeDir)).setName("Read maintenance notices from file");
-
-        // 2-tuple (vin, year|make|model)
-        BatchStage<Tuple2<String, String>> vehicleTypes = pipeline.drawFrom(Sources.jdbc(jdbcConnection, "SELECT vin, year, make, model FROM vehicles",
-                rs -> Tuple2.tuple2(rs.getString(1).trim(), makeVehicleType(rs.getInt(2), rs.getString(3), rs.getString(4))))).setName("Load vehicle reference data");
-
-        //3-tuple (notice num, year|make|model, note)
-        BatchStage<Tuple3<Integer, String, String>> maintenanceNotices = maintenanceNoticeLines.map(item -> parseMaintenanceNoticeLine(item)).setName("Parse maintenance notice");
-
-        //4-tuple (notice num, vin, year|make|model, note)
-        BatchStage<Tuple4<Integer, String, String, String>> maintenanceItems = maintenanceNotices.hashJoin(
-                vehicleTypes,
-                JoinClause.onKeys(notice -> notice.f1(), vehicleType -> vehicleType.f1()),
-                (notice, type) -> Tuple4.tuple4(notice.f0(), type == null ? null : type.f0(), type == null ? null : type.f1(), notice.f2()))
-                .setName("Join notices and vehicles");
-
-        BatchStage<Tuple4<Integer, String, String, String>> filteredItems = maintenanceItems.filter(item -> item.f1() != null).setName("Filter out notices with no matching vehicles");
-
-        filteredItems.drainTo(Sinks.logger(item -> String.format("MAINTENANCE NOTICE: %03d FOR %s (%s) - %s", item.f0(), item.f1(), item.f2(), item.f3()))).setName("Log maintenance items");
+        //TODO for Lab 6: build the pipeline
 
         return pipeline;
     }
