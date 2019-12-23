@@ -1,0 +1,10 @@
+1, 2002, Dodge, Durango, Inspect wheel bearings for premature wear.
+2, 2014, Honda, Civic, Emissions issue.
+3, 1989, Ford, Mustang, Check for rust.
+4, 1999, Ford, Econoline, Change timing chain.
+5, 2000, Ford, Econoline, Change timing chain.
+6, 2001, Ford, Econoline, Change timing chain.
+7, 2002, Ford, Econoline, Change timing chain.
+8, 1999, Dodge, Dakota, Check for rust.
+9, 2015, Jeep, Wrangler, Emissions issue.
+10,2015, Jeep,Grand Cherokee, Passenger airbag issue.
