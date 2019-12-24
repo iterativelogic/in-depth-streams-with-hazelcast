@@ -41,7 +41,7 @@ To do these labs you will need a laptop with the following:
 
 6. Maintenance Alerts: DONE
 
-   A new pipeline will be developed to support the delivery of make/model specific maintenance alerts to the fleet's operators.  The flat map operation will be introduced.
+   A new pipeline will be developed to support the delivery of make/model specific maintenance alerts to the fleet's operators.  The hash-join operation will be introduced.
 
 7. Fleet Monitoring: IN PROGRESS
 

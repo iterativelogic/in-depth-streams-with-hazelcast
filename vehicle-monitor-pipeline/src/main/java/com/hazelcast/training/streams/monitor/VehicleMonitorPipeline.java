@@ -1,12 +1,17 @@
 package com.hazelcast.training.streams.monitor;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.core.IMap;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
+import com.hazelcast.jet.aggregate.AggregateOperation;
+import com.hazelcast.jet.aggregate.AggregateOperation1;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
+import com.hazelcast.jet.datamodel.KeyedWindowResult;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
@@ -43,6 +48,8 @@ public class VehicleMonitorPipeline implements Serializable {
 
         // TODO in Lab 5 - Create a pipeline to monitor for crashes
 
+        // TODO in Lab 7 - Extend the pipeline to group by VIN and using a sliding window and a custom aggregator, calculate the velocity of each vehicle
+
         return pipeline;
     }
 
@@ -54,27 +61,13 @@ public class VehicleMonitorPipeline implements Serializable {
         return (long) timestamp * 1000;
     }
 
+
     // Identifies Pings of crashed vehicles.  If the vehicle has already been identified as a crashed vehicle,
     // return false. For new crashes, return true and add them to the list of known crashes
-    public static boolean isCrashed(ArrayList<String> knownCrashes, String pingAsJson){
+    public static boolean isCrashed(ArrayList<String> knownCrashes, Ping ping){
         boolean result = false;
-        JsonObject ping = JsonParser.parseString(pingAsJson).getAsJsonObject();
-        String vin = ping.get("vin").getAsString();
-        JsonArray obd_codes = ping.getAsJsonArray("obd_codes");
+        //TODO in Lab 5
 
-        if (obd_codes != null){
-            int size = obd_codes.size();
-            for(int i=0; i< size; ++i){
-                String code = obd_codes.get(i).getAsString();
-                if (code.equals("B0001")){
-                    if (!knownCrashes.contains(vin)){
-                        knownCrashes.add(vin);
-                        result = true;
-                        break;
-                    }
-                }
-            }
-        }
         return result;
     }
 
@@ -99,9 +92,7 @@ public class VehicleMonitorPipeline implements Serializable {
     private static Gson gson = new Gson();
 
     // invoke the closest city aggregator
-    public static String closestCity(IMap<String, City> cityMap, String jsonPing){
-        Ping ping = gson.fromJson(jsonPing, Ping.class);
-
+    public static String closestCity(IMap<String, City> cityMap, Ping ping){
         return cityMap.aggregate(new ClosestCityAggregator(ping.getLatitude(), ping.getLongitude()));
     }
 

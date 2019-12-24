@@ -50,18 +50,19 @@ vehicle_map.add_entry_listener(include_value=True, updated_func=vehicle_map_list
 
 
 def colormap(entry):
-    if 'status' in entry and entry['status'] == 'CRASHED':
+    if 'status' not in entry or entry['status'] == '':
+        return 'blue'
+    elif entry['status'] == 'CRASHED':
         return 'red'
     else:
-        return 'blue'
+        return 'yellow'
 
 
 def sizemap(entry):
-    if 'status' in entry and entry['status'] == 'CRASHED':
-        return 10
-    else:
+    if 'status' not in entry or entry['status'] == '':
         return 6
-
+    else:
+        return 10
 
 # now retrieve all entries from the map and build a ColumnDataSource
 
