@@ -6,6 +6,14 @@ import com.hazelcast.training.streams.model.Ping;
 
 import java.io.Serializable;
 
+/**
+ * This class will be used as a Jet custom aggregation. For each Ping in a given window, Jet will call the "accumulate"
+ * method.  If the pings of one window are spread out over different nodes, then all of the accumulators for a window
+ * will be combined using the "combine" method.  After combining, Jet will call "getResult" to get the velocity
+ * in meters per second.  To calculate the average velocity over the window, the accumulator only needs to keep track
+ * of the earliest and latest ping (based on the time field of the Ping, not the order of invocation).
+ */
+
 public class VelocityAccumulator  implements Serializable {
     private static ILogger log = Logger.getLogger(VelocityAccumulator.class);
 
