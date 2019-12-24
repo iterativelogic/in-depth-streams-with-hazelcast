@@ -1,12 +1,17 @@
 package com.hazelcast.training.streams.monitor;
 
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.core.IMap;
 import com.hazelcast.jet.Jet;
 import com.hazelcast.jet.JetInstance;
+import com.hazelcast.jet.aggregate.AggregateOperation;
+import com.hazelcast.jet.aggregate.AggregateOperation1;
 import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
+import com.hazelcast.jet.datamodel.KeyedWindowResult;
 import com.hazelcast.jet.datamodel.Tuple2;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
@@ -41,16 +46,35 @@ public class VehicleMonitorPipeline implements Serializable {
     public static Pipeline buildPipeline() {
         Pipeline pipeline = Pipeline.create();
 
-        StreamStage<Map.Entry<String, HazelcastJsonValue>> vehicles = pipeline.drawFrom(Sources.<String, HazelcastJsonValue>mapJournal("vehicles", JournalInitialPosition.START_FROM_CURRENT))
+        StreamStage<Map.Entry<String, HazelcastJsonValue>> mapEntries = pipeline.drawFrom(Sources.<String, HazelcastJsonValue>mapJournal("vehicles", JournalInitialPosition.START_FROM_CURRENT))
                 .withTimestamps(entry -> extractTimestampFromPingEntry(entry.getValue().toString()), MAXIMUM_LATENESS_MS);
 
-        StreamStage<Map.Entry<String, HazelcastJsonValue>> crashes = vehicles.<ArrayList<String>>filterStateful(ArrayList::new, (state, entry) -> isCrashed(state, entry.getValue().toString())).setName("filter crashes");
+        StreamStage<Ping> pings = mapEntries.map(entry -> gson.fromJson(entry.getValue().toString(), Ping.class)).setName("Convert to pings");
 
-        StreamStage<Tuple2<String, String>> closestCity = crashes.mapUsingContext(ContextFactory.withCreateFn(jet -> jet.getHazelcastInstance().<String, City>getMap("cities")), (map, entry) -> Tuple2.tuple2(entry.getKey(), closestCity(map, entry.getValue().toString()))).setName("find closest city");
+        StreamStage<Ping> crashes = pings.<ArrayList<String>>filterStateful(ArrayList::new, (state, ping) -> isCrashed(state, ping)).setName("filter crashes");
+
+        // tuple (vin, city name)
+        StreamStage<Tuple2<String, String>> closestCity = crashes.mapUsingContext(ContextFactory.withCreateFn(jet -> jet.getHazelcastInstance().<String, City>getMap("cities")), (map, ping) -> Tuple2.tuple2(ping.getVin(), closestCity(map, ping))).setName("find closest city");
 
         closestCity.drainTo(Sinks.mapWithUpdating("vehicles", (Tuple2<String, String> item) -> item.f0(),  (HazelcastJsonValue oldVal, Tuple2<String,String> newVal) -> update(oldVal, newVal) )).setName("Update vehicles map");
 
         closestCity.drainTo(Sinks.logger(entry -> String.format("CRASH DETECTED: %s HELP DISPATCHED FROM: %s", entry.f0(), entry.f1()))).setName("Dispatch Help");
+
+        AggregateOperation1<Ping, VelocityAccumulator, Double> velocityAggregator =
+                AggregateOperation.withCreate(VelocityAccumulator::new)
+                        .<Ping>andAccumulate((va, p) -> va.accumulate(p))
+                        .andCombine((l, r) -> l.combine(r))
+                        .andExportFinish(acc -> acc.getResult());
+
+        StageWithKeyAndWindow<Ping, String> pingWindows = pings.groupingKey(ping -> ping.getVin()).window(WindowDefinition.sliding(240 * 1000, 15 * 1000));
+        StreamStage<KeyedWindowResult<String, Double>> velocities = pingWindows.aggregate(velocityAggregator).setName("Calculate velocity");
+        velocities.peek().drainTo(Sinks.logger());
+
+        velocities.drainTo(Sinks.mapWithEntryProcessor(
+                "vehicles",
+                item -> item.getKey(),
+                item -> new UpdateSpeedEntryProcessor(item.getValue()))).setName("Update status");
+
         return pipeline;
     }
 
@@ -62,18 +86,18 @@ public class VehicleMonitorPipeline implements Serializable {
         return (long) timestamp * 1000;
     }
 
+
     // Identifies Pings of crashed vehicles.  If the vehicle has already been identified as a crashed vehicle,
     // return false. For new crashes, return true and add them to the list of known crashes
-    public static boolean isCrashed(ArrayList<String> knownCrashes, String pingAsJson){
+    public static boolean isCrashed(ArrayList<String> knownCrashes, Ping ping){
         boolean result = false;
-        JsonObject ping = JsonParser.parseString(pingAsJson).getAsJsonObject();
-        String vin = ping.get("vin").getAsString();
-        JsonArray obd_codes = ping.getAsJsonArray("obd_codes");
+        String vin = ping.getVin();
+        String []obd_codes = ping.getOBDCodes();
 
         if (obd_codes != null){
-            int size = obd_codes.size();
+            int size = obd_codes.length;
             for(int i=0; i< size; ++i){
-                String code = obd_codes.get(i).getAsString();
+                String code = obd_codes[i];
                 if (code.equals("B0001")){
                     if (!knownCrashes.contains(vin)){
                         knownCrashes.add(vin);
@@ -107,9 +131,7 @@ public class VehicleMonitorPipeline implements Serializable {
     private static Gson gson = new Gson();
 
     // invoke the closest city aggregator
-    public static String closestCity(IMap<String, City> cityMap, String jsonPing){
-        Ping ping = gson.fromJson(jsonPing, Ping.class);
-
+    public static String closestCity(IMap<String, City> cityMap, Ping ping){
         return cityMap.aggregate(new ClosestCityAggregator(ping.getLatitude(), ping.getLongitude()));
     }
 
