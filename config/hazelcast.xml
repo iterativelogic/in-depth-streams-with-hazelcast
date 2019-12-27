@@ -8,6 +8,7 @@
             <multicast enabled="false"/>
             <tcp-ip enabled="true">
                 <member>jet-server-1:5701</member>
+                <member>jet-server-2:5701</member>
             </tcp-ip>
         </join>
         <rest-api enabled="true">
@@ -22,6 +23,7 @@
 
     <hot-restart-persistence enabled="true">
         <base-dir>/opt/project/hot-restart</base-dir>
+        <auto-remove-stale-data>true</auto-remove-stale-data>
     </hot-restart-persistence>
 
     <event-journal enabled="true">
@@ -42,7 +44,7 @@
     </map>
 
     <properties>
-        <property name="hazelcast.initial.min.cluster.size">2</property>
+<!--        <property name="hazelcast.initial.min.cluster.size">2</property>-->
     </properties>
 
     <management-center enabled="true">http://imdg-management-center:8080/hazelcast-mancenter</management-center>

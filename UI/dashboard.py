@@ -9,7 +9,7 @@ from bokeh.models.map_plots import GMapOptions
 from bokeh.plotting import gmap
 
 LOG_LEVEL = logging.DEBUG
-HAZELCAST_MEMBERS = ['jet-server-1:5701']
+HAZELCAST_MEMBERS = ['jet-server-1:5701','jet-server-2:5701']
 
 logging.basicConfig(level=LOG_LEVEL)
 
