@@ -54,12 +54,14 @@ def colormap(entry):
         return 'blue'
     elif entry['status'] == 'CRASHED':
         return 'red'
+    elif entry['status'] == 'SELECTED':
+        return 'green'
     else:
         return 'yellow'
 
 
 def sizemap(entry):
-    if 'status' not in entry or entry['status'] == '':
+    if 'status' not in entry or entry['status'] == '' or entry['status']=='SELECTED':
         return 6
     else:
         return 10

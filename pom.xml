@@ -23,6 +23,7 @@
         <module>ingest-pipeline</module>
         <module>vehicle-monitor-pipeline</module>
         <module>maintenance-alert-job</module>
+        <module>query-client</module>
     </modules>
 
     <repositories>
