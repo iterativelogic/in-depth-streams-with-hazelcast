@@ -47,14 +47,14 @@ To do these labs you will need a laptop with the following:
 
    The vehicle monitor pipeline will be extended to continuously calculate speed and miles driven.  This will involve a custom aggregator.  An entry processor will be used on the speed category map sink to avoid duplicate updates.  Now UMove will be able to see who is speeding in real time!
 
-8. Area Specific Notifications: IN PROGRESS
+8. Ad Hoc Queries: DONE
 
-   UMove needs the ability to provide alerts to driver who are currently in specific grid squares.  The student will use the IMDG query feature to build this functionality.  They will improve performance using an index. The scheduled executor service will be used to periodically check for drivers who have entered an area of interest and send them notifications.
+   This lab explores Ad-Hoc Queries
 
 9. Mileage Limits: NOT STARTED
 
    Vehicles in a certain category have daily mileage limits.  The student will use what they have learned to implement this feature.  
 
-10. Maintenance Reports: NOT STARTED
+10. Geofencing: NOT STARTED
 
     The student will use bounded (batch) streams to produce a report of vehicles that need maintenance.
