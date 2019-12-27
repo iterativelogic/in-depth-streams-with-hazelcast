@@ -2,17 +2,12 @@ package com.hazelcast.training.streams.queryclient;
 
 import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.client.config.ClientConfig;
-import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.core.IMap;
-import com.hazelcast.query.SqlPredicate;
-import com.hazelcast.training.streams.logic.UpdateEntryStatusProcessor;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.Collection;
-import java.util.Set;
 
 public class QueryClient {
     /**
@@ -83,17 +78,14 @@ public class QueryClient {
     }
 
     private static void doSelect(String query) {
-        vehicles.executeOnEntries(new UpdateEntryStatusProcessor("SELECTED"), new SqlPredicate(query));
+        //TODO in Lab 8 - implement this using IMap.executeOnEntries(EntryProcessor, Predicate)
     }
 
     private static void doDeselect(String query) {
-        vehicles.executeOnEntries(new UpdateEntryStatusProcessor(""), new SqlPredicate(query));
+        //TODO in Lab 8 - implement this using IMap.executeOnEntries(EntryProcessor, Predicate)
     }
 
     private static void doQuery(String query) {
-        Collection<HazelcastJsonValue> selectedVehicles = vehicles.values(new SqlPredicate(query));
-        for(HazelcastJsonValue j: selectedVehicles){
-            System.out.println("\t" + j.toString());
-        }
+        //TODO in Lab 8 - implement this using IMap.values(Predicate).  Print each result to System.out
     }
 }
