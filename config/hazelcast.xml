@@ -8,6 +8,7 @@
             <multicast enabled="false"/>
             <tcp-ip enabled="true">
                 <member>jet-server-1:5701</member>
+                <member>jet-server-2:5701</member>
             </tcp-ip>
         </join>
         <rest-api enabled="true">

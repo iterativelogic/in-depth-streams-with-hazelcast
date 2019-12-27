@@ -9,7 +9,7 @@ from bokeh.models.map_plots import GMapOptions
 from bokeh.plotting import gmap
 
 LOG_LEVEL = logging.DEBUG
-HAZELCAST_MEMBERS = ['jet-server-1:5701']
+HAZELCAST_MEMBERS = ['jet-server-1:5701','jet-server-2:5701']
 
 logging.basicConfig(level=LOG_LEVEL)
 
@@ -54,12 +54,14 @@ def colormap(entry):
         return 'blue'
     elif entry['status'] == 'CRASHED':
         return 'red'
+    elif entry['status'] == 'SELECTED':
+        return 'green'
     else:
         return 'yellow'
 
 
 def sizemap(entry):
-    if 'status' not in entry or entry['status'] == '':
+    if 'status' not in entry or entry['status'] == '' or entry['status']=='SELECTED':
         return 6
     else:
         return 10
