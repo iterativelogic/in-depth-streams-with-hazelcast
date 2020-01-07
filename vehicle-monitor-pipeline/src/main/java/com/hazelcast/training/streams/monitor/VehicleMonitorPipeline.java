@@ -3,6 +3,7 @@ package com.hazelcast.training.streams.monitor;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.hazelcast.core.EntryEventType;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.core.IMap;
 import com.hazelcast.jet.Jet;
@@ -13,14 +14,17 @@ import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.KeyedWindowResult;
 import com.hazelcast.jet.datamodel.Tuple2;
+import com.hazelcast.jet.datamodel.Tuple3;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
+import com.hazelcast.map.journal.EventJournalMapEvent;
+import com.hazelcast.training.streams.model.Area;
 import com.hazelcast.training.streams.model.City;
 import com.hazelcast.training.streams.model.Ping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Collection;
 
 public class VehicleMonitorPipeline implements Serializable {
 
@@ -43,13 +47,18 @@ public class VehicleMonitorPipeline implements Serializable {
         jet.newJob(pipeline, config);
     }
 
-    public static Pipeline buildPipeline() {
+    private static Pipeline buildPipeline() {
         Pipeline pipeline = Pipeline.create();
 
-        StreamStage<Map.Entry<String, HazelcastJsonValue>> mapEntries = pipeline.drawFrom(Sources.<String, HazelcastJsonValue>mapJournal("vehicles", JournalInitialPosition.START_FROM_CURRENT))
-                .withTimestamps(entry -> extractTimestampFromPingEntry(entry.getValue().toString()), MAXIMUM_LATENESS_MS);
+        StreamStage<EventJournalMapEvent<String, HazelcastJsonValue>> oldNew = pipeline.drawFrom(Sources.<EventJournalMapEvent<String, HazelcastJsonValue>, String, HazelcastJsonValue>mapJournal(
+                "vehicles",
+                item -> item.getType() == EntryEventType.ADDED || item.getType() == EntryEventType.UPDATED,
+                item -> item, JournalInitialPosition.START_FROM_CURRENT))
+                .withTimestamps(journalEvent -> extractTimestampFromPingEntry(journalEvent.getNewValue().toString()), MAXIMUM_LATENESS_MS).setName("Old and new value from puts to vehicles");
 
-        StreamStage<Ping> pings = mapEntries.map(entry -> gson.fromJson(entry.getValue().toString(), Ping.class)).setName("Convert to pings");
+        StreamStage<Tuple2<Ping, Ping>> oldNewPing = oldNew.map(event -> Tuple2.tuple2(event.getOldValue() == null ? null : gson.fromJson(event.getOldValue().toString(), Ping.class), gson.fromJson(event.getNewValue().toString(), Ping.class))).setName("Convert to Old/New Pings");
+
+        StreamStage<Ping> pings = oldNewPing.map(item -> item.f1()).setName("Select new Ping");
 
         StreamStage<Ping> crashes = pings.<ArrayList<String>>filterStateful(ArrayList::new, (state, ping) -> isCrashed(state, ping)).setName("filter crashes");
 
@@ -75,12 +84,28 @@ public class VehicleMonitorPipeline implements Serializable {
                 item -> item.getKey(),
                 item -> new UpdateSpeedEntryProcessor(item.getValue()))).setName("Update status");
 
+        // returns 3-tuple (vin, old area, new area)
+        StreamStage<Tuple3<String, Area, Area>> oldNewAreas = oldNewPing.mapUsingContext(
+                ContextFactory.withCreateFn(jet -> jet.getHazelcastInstance().<String, Area>getMap("areas")),
+                (areas, oldNewPings) -> mapOldNewPingsToOldNewAreas(areas, oldNewPings)).setName("Convert Old/New Pings to Areas");
+
+        StreamStage<Tuple3<String, Area, Area>> areaChanges = oldNewAreas.filter(VehicleMonitorPipeline::filterChanges);
+
+        // since they are separate map entries we can't handle the remove and the add at the same time
+        areaChanges.filter(item -> item.f1() != null).drainTo(Sinks.mapWithEntryProcessor("areas",
+                item -> item.f1().getName(),
+                item -> new VehicleLeftAreaEntryProcessor(item.f0()))).setName("Remove vehicle from area");
+
+        areaChanges.filter(item -> item.f2() != null).drainTo(Sinks.mapWithEntryProcessor("areas",
+                item -> item.f2().getName(),
+                item -> new VehicleEnteredAreaEntryProcessor(item.f0()))).setName("Add vehicle to area");
+
         return pipeline;
     }
 
     /**************** Utility Methods *******************/
 
-    public static long extractTimestampFromPingEntry(String pingAsJson){
+    private static long extractTimestampFromPingEntry(String pingAsJson){
         JsonElement pingElement = JsonParser.parseString(pingAsJson);
         float timestamp = pingElement.getAsJsonObject().get("time").getAsFloat();
         return (long) timestamp * 1000;
@@ -89,7 +114,7 @@ public class VehicleMonitorPipeline implements Serializable {
 
     // Identifies Pings of crashed vehicles.  If the vehicle has already been identified as a crashed vehicle,
     // return false. For new crashes, return true and add them to the list of known crashes
-    public static boolean isCrashed(ArrayList<String> knownCrashes, Ping ping){
+    private static boolean isCrashed(ArrayList<String> knownCrashes, Ping ping){
         boolean result = false;
         String vin = ping.getVin();
         String []obd_codes = ping.getOBDCodes();
@@ -131,8 +156,33 @@ public class VehicleMonitorPipeline implements Serializable {
     private static Gson gson = new Gson();
 
     // invoke the closest city aggregator
-    public static String closestCity(IMap<String, City> cityMap, Ping ping){
+    private static String closestCity(IMap<String, City> cityMap, Ping ping){
         return cityMap.aggregate(new ClosestCityAggregator(ping.getLatitude(), ping.getLongitude()));
     }
 
+    private static Tuple3<String, Area, Area> mapOldNewPingsToOldNewAreas(IMap<String, Area> areas, Tuple2<Ping, Ping> oldNewPings){
+        Area oldArea = null;
+        Area newArea = null;
+        Ping oldPing = oldNewPings.f0();
+        Ping newPing = oldNewPings.f1();
+
+        Collection<Area> allAreas = areas.values();
+        for (Area area : allAreas) {
+            if (oldPing != null && area.contains(oldPing)) oldArea = area;
+            if (area.contains(newPing)) newArea = area;
+
+            if ( newArea != null && (oldPing == null || oldArea != null)) break;
+        }
+
+        return Tuple3.tuple3(newPing.getVin(), oldArea, newArea);
+    }
+
+    private static boolean filterChanges(Tuple3<String, Area, Area> item){
+        Area oldArea = item.f1();
+        Area newArea = item.f2();
+
+        if (oldArea == null && newArea == null) return false;
+
+        return oldArea == null || newArea == null || oldArea.getName().equals(newArea.getName());
+    }
 }
