@@ -40,6 +40,13 @@
         </map-store>
     </map>
 
+    <map name="areas">
+        <in-memory-format>OBJECT</in-memory-format>
+        <map-store enabled="true" initial-mode="EAGER">
+            <class-name>com.hazelcast.training.streams.server.AreaMapLoader</class-name>
+        </map-store>
+    </map>
+
     <properties>
         <property name="hazelcast.initial.min.cluster.size">2</property>
     </properties>

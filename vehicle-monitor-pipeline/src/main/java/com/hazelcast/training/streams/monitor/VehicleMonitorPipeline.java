@@ -3,6 +3,7 @@ package com.hazelcast.training.streams.monitor;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import com.hazelcast.core.EntryEventType;
 import com.hazelcast.core.HazelcastJsonValue;
 import com.hazelcast.core.IMap;
 import com.hazelcast.jet.Jet;
@@ -13,14 +14,17 @@ import com.hazelcast.jet.config.JobConfig;
 import com.hazelcast.jet.config.ProcessingGuarantee;
 import com.hazelcast.jet.datamodel.KeyedWindowResult;
 import com.hazelcast.jet.datamodel.Tuple2;
+import com.hazelcast.jet.datamodel.Tuple3;
 import com.hazelcast.jet.pipeline.*;
 import com.hazelcast.jet.server.JetBootstrap;
+import com.hazelcast.map.journal.EventJournalMapEvent;
+import com.hazelcast.training.streams.model.Area;
 import com.hazelcast.training.streams.model.City;
 import com.hazelcast.training.streams.model.Ping;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Map;
+import java.util.Collection;
 
 public class VehicleMonitorPipeline implements Serializable {
 
@@ -43,19 +47,20 @@ public class VehicleMonitorPipeline implements Serializable {
         jet.newJob(pipeline, config);
     }
 
-    public static Pipeline buildPipeline() {
+    private static Pipeline buildPipeline() {
         Pipeline pipeline = Pipeline.create();
 
         // TODO in Lab 5 - Create a pipeline to monitor for crashes
 
         // TODO in Lab 7 - Extend the pipeline to group by VIN and using a sliding window and a custom aggregator, calculate the velocity of each vehicle
 
+        // TODO in Lab 8 - Extend the pipeline to update the list of vehicles in each area
         return pipeline;
     }
 
     /**************** Utility Methods *******************/
 
-    public static long extractTimestampFromPingEntry(String pingAsJson){
+    private static long extractTimestampFromPingEntry(String pingAsJson){
         JsonElement pingElement = JsonParser.parseString(pingAsJson);
         float timestamp = pingElement.getAsJsonObject().get("time").getAsFloat();
         return (long) timestamp * 1000;
@@ -64,7 +69,7 @@ public class VehicleMonitorPipeline implements Serializable {
 
     // Identifies Pings of crashed vehicles.  If the vehicle has already been identified as a crashed vehicle,
     // return false. For new crashes, return true and add them to the list of known crashes
-    public static boolean isCrashed(ArrayList<String> knownCrashes, Ping ping){
+    private static boolean isCrashed(ArrayList<String> knownCrashes, Ping ping){
         boolean result = false;
         //TODO in Lab 5
 
@@ -92,7 +97,7 @@ public class VehicleMonitorPipeline implements Serializable {
     private static Gson gson = new Gson();
 
     // invoke the closest city aggregator
-    public static String closestCity(IMap<String, City> cityMap, Ping ping){
+    private static String closestCity(IMap<String, City> cityMap, Ping ping){
         return cityMap.aggregate(new ClosestCityAggregator(ping.getLatitude(), ping.getLongitude()));
     }
 
