@@ -71,16 +71,7 @@ public class VelocityAccumulator  implements Serializable {
 
     // returns the velocity in meters per second
     public Double getResult(){
-        double R = 6371000;
-
-        double phi1 = Math.toRadians(earliestLat);
-        double phi2 = Math.toRadians(latestLat);
-        double deltaPhi = phi2- phi1;
-        double deltaLambda = Math.toRadians(latestLon) - Math.toRadians(earliestLon);
-
-        double a = Math.pow(Math.sin(deltaPhi / 2.0), 2.0) + Math.cos(phi1) * Math.cos(phi2) * Math.pow(Math.sin(deltaLambda / 2.0), 2.0);
-        double c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(1.0 - a));
-        double distance = R*c;
+        double distance = GeoUtils.distance(earliestLat, earliestLon, latestLat, latestLon);
 
         double time = latestTime - earliestTime;
         log.fine(String.format("%s traveling at %f m/s as of %.0f", vin, distance / time, latestTime));

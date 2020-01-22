@@ -29,6 +29,7 @@ import java.util.Collection;
 public class VehicleMonitorPipeline implements Serializable {
 
     private static long MAXIMUM_LATENESS_MS = 20000;
+    private static long MILEAGE_LIMIT_METERS = 20 * 1000;
 
     public static void main(String[] args) {
         JetInstance jet;
@@ -39,15 +40,20 @@ public class VehicleMonitorPipeline implements Serializable {
             jet = JetBootstrap.getInstance();
         }
 
+        if (args.length < 1)
+            throw new RuntimeException("This job requires 1 argument: jdbc connection url");
+
+        String jdbcConnection = args[0];
+
         JobConfig config = new JobConfig();
         config.setProcessingGuarantee(ProcessingGuarantee.AT_LEAST_ONCE);
         config.setSnapshotIntervalMillis(10 * 1000);
 
-        Pipeline pipeline = buildPipeline();
+        Pipeline pipeline = buildPipeline(jdbcConnection);
         jet.newJob(pipeline, config);
     }
 
-    private static Pipeline buildPipeline() {
+    private static Pipeline buildPipeline(String jdbcURL) {
         Pipeline pipeline = Pipeline.create();
 
         StreamStage<EventJournalMapEvent<String, HazelcastJsonValue>> oldNew = pipeline.drawFrom(Sources.<EventJournalMapEvent<String, HazelcastJsonValue>, String, HazelcastJsonValue>mapJournal(
@@ -58,7 +64,7 @@ public class VehicleMonitorPipeline implements Serializable {
 
         StreamStage<Tuple2<Ping, Ping>> oldNewPing = oldNew.map(event -> Tuple2.tuple2(event.getOldValue() == null ? null : gson.fromJson(event.getOldValue().toString(), Ping.class), gson.fromJson(event.getNewValue().toString(), Ping.class))).setName("Convert to Old/New Pings");
 
-        StreamStage<Ping> pings = oldNewPing.map(item -> item.f1()).setName("Select new Ping");
+        StreamStage<Ping> pings = oldNewPing.map(Tuple2::f1).setName("Select new Ping");
 
         StreamStage<Ping> crashes = pings.<ArrayList<String>>filterStateful(ArrayList::new, (state, ping) -> isCrashed(state, ping)).setName("filter crashes");
 
@@ -69,20 +75,39 @@ public class VehicleMonitorPipeline implements Serializable {
 
         closestCity.drainTo(Sinks.logger(entry -> String.format("CRASH DETECTED: %s HELP DISPATCHED FROM: %s", entry.f0(), entry.f1()))).setName("Dispatch Help");
 
+
         AggregateOperation1<Ping, VelocityAccumulator, Double> velocityAggregator =
                 AggregateOperation.withCreate(VelocityAccumulator::new)
                         .<Ping>andAccumulate((va, p) -> va.accumulate(p))
                         .andCombine((l, r) -> l.combine(r))
                         .andExportFinish(acc -> acc.getResult());
 
-        StageWithKeyAndWindow<Ping, String> pingWindows = pings.groupingKey(ping -> ping.getVin()).window(WindowDefinition.sliding(240 * 1000, 15 * 1000));
+
+
+        StageWithKeyAndWindow<Ping, String> pingWindows = pings.groupingKey(Ping::getVin).window(WindowDefinition.sliding(240 * 1000, 15 * 1000));
         StreamStage<KeyedWindowResult<String, Double>> velocities = pingWindows.aggregate(velocityAggregator).setName("Calculate velocity");
-        velocities.peek().drainTo(Sinks.logger());
+
 
         velocities.drainTo(Sinks.mapWithEntryProcessor(
                 "vehicles",
                 item -> item.getKey(),
                 item -> new UpdateSpeedEntryProcessor(item.getValue()))).setName("Update status");
+
+        // returns tuple (VIN, Make)
+        BatchStage<Tuple2<String, String>> vehicleMakes = pipeline.drawFrom(Sources.jdbc(jdbcURL, "SELECT vin, make FROM vehicles",
+                rs -> Tuple2.tuple2(rs.getString(1).trim(), rs.getString(2).trim()))).setName("Vehicle Makes");
+
+        StreamStage<Tuple2<Ping, String>> pingsWithMake = pings.hashJoin(vehicleMakes, JoinClause.<String, Ping, Tuple2<String, String>>onKeys(Ping::getVin, Tuple2::f0).projecting(Tuple2::f1), (ping, make) -> Tuple2.tuple2(ping, make));
+
+        // returns tuple2(ping, make) but all the makes are Mercedes - would be nice to allow map method here
+        StreamStage<Ping> luxuryPings = pingsWithMake.filter(t2 -> t2.f1() != null && t2.f1().equals("MERCEDES-BENZ")).map(Tuple2::f0).setName("Select Luxury Vehicles");
+
+        // returns (vin, distance)
+        StreamStage<Tuple2<String, Double>> luxuryDistances = luxuryPings.groupingKey(Ping::getVin).mapStateful(DistanceAccumulator::new, (accumulator, vin, ping) -> Tuple2.tuple2(vin, accumulator.accumulate(ping))).setName("Calculate distance");
+
+        luxuryDistances.groupingKey(Tuple2::f0).filterStateful(0, () -> new EdgeFilter(MILEAGE_LIMIT_METERS), ( filter,  item) -> filter.apply(item.f1()))
+                .drainTo(Sinks.logger( item -> String.format("VEHICLE %s HAS EXCEEDED THE MILEAGE LIMIT, NOW AT %d KM",item.f0(), item.f1().intValue() / 1000)));
+
 
         // returns 3-tuple (vin, old area, new area)
         StreamStage<Tuple3<String, Area, Area>> oldNewAreas = oldNewPing.mapUsingContext(
