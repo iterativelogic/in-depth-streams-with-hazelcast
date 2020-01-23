@@ -99,11 +99,14 @@ public class VehicleMonitorPipeline implements Serializable {
 
         StreamStage<Tuple2<Ping, String>> pingsWithMake = pings.hashJoin(vehicleMakes, JoinClause.<String, Ping, Tuple2<String, String>>onKeys(Ping::getVin, Tuple2::f0).projecting(Tuple2::f1), (ping, make) -> Tuple2.tuple2(ping, make));
 
+
         // returns tuple2(ping, make) but all the makes are Mercedes - would be nice to allow map method here
         StreamStage<Ping> luxuryPings = pingsWithMake.filter(t2 -> t2.f1() != null && t2.f1().equals("MERCEDES-BENZ")).map(Tuple2::f0).setName("Select Luxury Vehicles");
 
         // returns (vin, distance)
         StreamStage<Tuple2<String, Double>> luxuryDistances = luxuryPings.groupingKey(Ping::getVin).mapStateful(DistanceAccumulator::new, (accumulator, vin, ping) -> Tuple2.tuple2(vin, accumulator.accumulate(ping))).setName("Calculate distance");
+
+        luxuryDistances.peek().drainTo(Sinks.logger(item -> String.format("VEHICLE %s HAS GONE %d KM", item.f0(), item.f1().intValue() / 1000)));
 
         luxuryDistances.groupingKey(Tuple2::f0).filterStateful(0, () -> new EdgeFilter(MILEAGE_LIMIT_METERS), ( filter,  item) -> filter.apply(item.f1()))
                 .drainTo(Sinks.logger( item -> String.format("VEHICLE %s HAS EXCEEDED THE MILEAGE LIMIT, NOW AT %d KM",item.f0(), item.f1().intValue() / 1000)));
