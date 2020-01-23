@@ -29,6 +29,7 @@ import java.util.Collection;
 public class VehicleMonitorPipeline implements Serializable {
 
     private static long MAXIMUM_LATENESS_MS = 20000;
+    private static long MILEAGE_LIMIT_METERS = 20 * 1000;
 
     public static void main(String[] args) {
         JetInstance jet;
@@ -39,15 +40,20 @@ public class VehicleMonitorPipeline implements Serializable {
             jet = JetBootstrap.getInstance();
         }
 
+        if (args.length < 1)
+            throw new RuntimeException("This job requires 1 argument: jdbc connection url");
+
+        String jdbcConnection = args[0];
+
         JobConfig config = new JobConfig();
         config.setProcessingGuarantee(ProcessingGuarantee.AT_LEAST_ONCE);
         config.setSnapshotIntervalMillis(10 * 1000);
 
-        Pipeline pipeline = buildPipeline();
+        Pipeline pipeline = buildPipeline(jdbcConnection);
         jet.newJob(pipeline, config);
     }
 
-    private static Pipeline buildPipeline() {
+    private static Pipeline buildPipeline(String jdbcURL) {
         Pipeline pipeline = Pipeline.create();
 
         // TODO in Lab 5 - Create a pipeline to monitor for crashes
@@ -55,6 +61,8 @@ public class VehicleMonitorPipeline implements Serializable {
         // TODO in Lab 7 - Extend the pipeline to group by VIN and using a sliding window and a custom aggregator, calculate the velocity of each vehicle
 
         // TODO in Lab 8 - Extend the pipeline to update the list of vehicles in each area
+
+        // TODO in Lab 10 - Extend the pipeline to track mileage for luxury vehicles and log an alert when the mileage limit is exceeded
         return pipeline;
     }
 

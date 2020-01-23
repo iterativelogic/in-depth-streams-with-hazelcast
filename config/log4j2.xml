@@ -12,7 +12,7 @@
 <!--        <Logger name="com.hazelcast" level="debug" additivity="false">-->
 <!--            <AppenderRef ref="Console"/>-->
 <!--        </Logger>-->
-        <Logger name="com.hazelcast.training" level="trace" additivity="false">
+        <Logger name="com.hazelcast.training" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
     </Loggers>
