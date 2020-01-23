@@ -39,6 +39,11 @@
             <groupId>com.hazelcast.jet</groupId>
             <artifactId>hazelcast-jet-enterprise</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.hazelcast.training</groupId>
+            <artifactId>common</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <!-- TODO add logging dependencies -->
     </dependencies>
 
