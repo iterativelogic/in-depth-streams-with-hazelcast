@@ -9,9 +9,7 @@
         <Root level="info">
             <AppenderRef ref="Console"/>
         </Root>
-<!--        <Logger name="com.hazelcast" level="debug" additivity="false">-->
-<!--            <AppenderRef ref="Console"/>-->
-<!--        </Logger>-->
+        <!-- TODO change the log level for com.hazelcast.training to trace -->
         <Logger name="com.hazelcast.training" level="info" additivity="false">
             <AppenderRef ref="Console"/>
         </Logger>
