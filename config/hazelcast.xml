@@ -21,6 +21,7 @@
         </rest-api>
     </network>
 
+    <!-- TODO in Lab 4 - Enable hot restart persistence and that the files should reside in /opt/project/hot-restart -->
 
     <properties>
         <property name="hazelcast.initial.min.cluster.size">2</property>
