@@ -3,7 +3,7 @@ version: "3"
 
 services:
 
-  # TODO edit the command paragraph to use the correct class path and user name
+  # TODO edit the command paragraph to use the correct class path and class name
   # TODO configure the underlying hazelcast instance to use /opt/project/config/hazelcast.xml for declarative configuration
   jet-server-1:
     container_name: jet-server-1
@@ -17,7 +17,7 @@ services:
       -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
       com.example.MyServer
 
-  # TODO make 2 more copies of jet-server-1, renaming them to jet-server-2 and jet-server-3 respectively. Make sure to
+  # TODO make a copy of jet-server-1, renaming it to jet-server-2. Make sure to
   #      change the container_name to match.
 
   imdg-management-center:
