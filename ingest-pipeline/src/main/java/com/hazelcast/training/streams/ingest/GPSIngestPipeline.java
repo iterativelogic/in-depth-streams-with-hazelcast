@@ -27,7 +27,6 @@ public class GPSIngestPipeline implements Serializable {
             jet = JetBootstrap.getInstance();
         }
 
-        // we assume that one argument is provided - the URL of the web service
         if (args.length < 2)
             throw new RuntimeException("Directory of Alpha Source and URL of Beta GPS Source are Required Arguments");
 
