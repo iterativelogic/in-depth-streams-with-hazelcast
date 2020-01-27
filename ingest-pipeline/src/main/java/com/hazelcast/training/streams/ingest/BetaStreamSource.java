@@ -22,7 +22,6 @@ public class BetaStreamSource {
     // current state
     private long lastPoll = 0;
     private int highestSequence;
-    private char [] buffer = new char[10000];
 
     public static BetaStreamSource create(String url){
         return new BetaStreamSource(url);
