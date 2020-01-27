@@ -56,6 +56,9 @@ public class BetaStreamSource {
 
     private Ping []poll(float since, int limit){
         long now = System.currentTimeMillis();
+
+        // Jet will poll the source many times per second.  To avoid beating up the web service, don't call
+        // it unless 2 seconds have elapsed.
         if (now - lastPoll < 2000) return new Ping[0];
 
         lastPoll = now;
