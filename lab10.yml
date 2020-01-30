@@ -37,23 +37,15 @@ services:
       -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
       com.hazelcast.training.streams.server.Server
 
-#  jet-server-3:
-#    container_name: jet-server-3
-#    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
-#    volumes:
-#      - ".:/opt/project"
-#    environment:
-#      CITY_DATA_FILE: /opt/project/data/mapdata.csv
-#    command: >
-#      java
-#      -cp /opt/project/jet-server/target/jet-server-1.0-SNAPSHOT.jar
-#      -Dhazelcast.config=/opt/project/config/hazelcast.xml
-#      -Dhazelcast.jet.config=/opt/project/config/hazelcast-jet.xml
-#      -Dhazelcast.enterprise.license.key=${JET_LICENSE_KEY}
-#      -Dhazelcast.logging.type=log4j2
-#      -Dlog4j2.configurationFile=/opt/project/config/log4j2.xml
-#      com.hazelcast.training.streams.server.Server
-
+  admin-server:
+    container_name: admin-server
+    networks:
+      ids_net:
+        ipv4_address: 192.168.1.99
+    image: hazelcast/hazelcast-jet-enterprise@sha256:bef554c744d89f71be147bb42f658e4d68745d159a99f51c474b2827091fe74a
+    volumes:
+      - ".:/opt/project"
+    command: echo EXITING
 
 
   fleetsim-beta:
