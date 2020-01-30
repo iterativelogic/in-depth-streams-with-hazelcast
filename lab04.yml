@@ -8,7 +8,7 @@ services:
     networks:
       ids_net:
         ipv4_address: 192.168.1.101
-    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+    image: hazelcast/hazelcast-jet-enterprise@sha256:bef554c744d89f71be147bb42f658e4d68745d159a99f51c474b2827091fe74a
     volumes:
       - ".:/opt/project"
     command: >
@@ -25,7 +25,7 @@ services:
     networks:
       ids_net:
         ipv4_address: 192.168.1.102
-    image: hazelcast/hazelcast-jet-enterprise@sha256:95138f113992b8a98865cc42af59b918b1a9edff4f2d70850f69d8e29996b5cb
+    image: hazelcast/hazelcast-jet-enterprise@sha256:bef554c744d89f71be147bb42f658e4d68745d159a99f51c474b2827091fe74a
     volumes:
       - ".:/opt/project"
     command: >
