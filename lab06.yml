@@ -5,6 +5,9 @@ services:
 
   jet-server-1:
     container_name: jet-server-1
+    networks:
+      ids_net:
+        ipv4_address: 192.168.1.101
     image: hazelcast/hazelcast-jet-enterprise@sha256:bef554c744d89f71be147bb42f658e4d68745d159a99f51c474b2827091fe74a
     volumes:
       - ".:/opt/project"
@@ -23,6 +26,9 @@ services:
 
   jet-server-2:
     container_name: jet-server-2
+    networks:
+      ids_net:
+        ipv4_address: 192.168.1.102
     image: hazelcast/hazelcast-jet-enterprise@sha256:bef554c744d89f71be147bb42f658e4d68745d159a99f51c474b2827091fe74a
     volumes:
       - ".:/opt/project"
@@ -52,6 +58,9 @@ services:
 
   hsqldb:
     container_name: hsqldb
+    networks:
+      ids_net:
+        ipv4_address: 192.168.1.131
     image: openjdk:8u201-jre-alpine
     volumes:
       - ".:/opt/project"
@@ -62,6 +71,9 @@ services:
 
   imdg-management-center:
     container_name: imdg-management-center
+    networks:
+      ids_net:
+        ipv4_address: 192.168.1.124
     image: hazelcast/management-center@sha256:52ea78110f7cf4d129d73133606dd35796a61e47728a72b5fe805fc210fa34d1
     volumes:
       - "./mc-home:/data"
@@ -70,6 +82,9 @@ services:
 
   jet-management-center:
     container_name: jet-management-center
+    networks:
+      ids_net:
+        ipv4_address: 192.168.1.125
     image: hazelcast/hazelcast-jet-management-center@sha256:532f625637adbd576f224d971c76c94d2f44fd37491c57ac689965b4e70d40b5
     environment:
       MC_CLIENT_CONFIG: /opt/project/config/hazelcast-client.xml
@@ -78,3 +93,10 @@ services:
       - ".:/opt/project"
     ports:
       - 8081:8081
+
+networks:
+  ids_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: "192.168.1.0/24"
