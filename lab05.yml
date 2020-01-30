@@ -119,7 +119,7 @@ services:
       - ".:/opt/project"
     ports:
       - 8081:8081
-      -
+
 networks:
   ids_net:
     ipam:
