@@ -51,7 +51,6 @@
     </map>
 
     <properties>
-<!--        <property name="hazelcast.initial.min.cluster.size">2</property>-->
     </properties>
 
     <management-center enabled="true">http://imdg-management-center:8080/hazelcast-mancenter</management-center>
